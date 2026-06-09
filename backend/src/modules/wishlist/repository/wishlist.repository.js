@@ -59,7 +59,15 @@ export const wishlistRepository = {
             where: (w, { eq }) => eq(w.userId, userId),
             with: {
                 book: {
-                    with: { images: true }
+                    with: {
+                        images: true,
+                        seller: {
+                            with: {
+                                setting: true
+                            }
+                        },
+                        locationCity: true
+                    }
                 }
             },
             orderBy: (w, { desc }) => [desc(w.createdAt)],

@@ -1,4 +1,5 @@
 import { pgTable, text, uuid, varchar, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 import { timeStamps } from "./utils/timestamps.common.js";
 import { citiesModel } from "./cites.schema.js";
@@ -28,3 +29,10 @@ export const userSettingModel = pgTable("user_setting", {
 
     ...timeStamps
 });
+
+export const userSettingRelations = relations(userSettingModel, ({ one }) => ({
+    user: one(userAccountModel, {
+        fields: [userSettingModel.userId],
+        references: [userAccountModel.id],
+    }),
+}));

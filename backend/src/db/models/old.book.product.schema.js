@@ -85,8 +85,20 @@ export const oldBookProductImagesModel = pgTable("old_book_product_images", {
     ...timeStamps
 });
 
-export const oldBookProductRelations = relations(oldBookProductModel, ({ many }) => ({
+export const oldBookProductRelations = relations(oldBookProductModel, ({ many, one }) => ({
     images: many(oldBookProductImagesModel),
+    seller: one(userAccountModel, {
+        fields: [oldBookProductModel.sellerId],
+        references: [userAccountModel.id],
+    }),
+    locationCity: one(citiesModel, {
+        fields: [oldBookProductModel.city],
+        references: [citiesModel.id],
+    }),
+    locationCountry: one(countriesModel, {
+        fields: [oldBookProductModel.country],
+        references: [countriesModel.id],
+    }),
 }));
 
 export const oldBookProductImagesRelations = relations(oldBookProductImagesModel, ({ one }) => ({

@@ -13,6 +13,22 @@ export interface BookImage {
   resource_type: string;
 }
 
+export interface SellerSetting {
+  profileImageUrl: string | null;
+}
+
+export interface SellerInfo {
+  id: string;
+  name: string;
+  email: string;
+  setting: SellerSetting | null;
+}
+
+export interface LocationCity {
+  id: number;
+  name: string;
+}
+
 export interface BookListing {
   id: string;
   sellerId: string;
@@ -28,6 +44,8 @@ export interface BookListing {
   createdAt: string;
   updatedAt: string;
   images: BookImage[];
+  seller: SellerInfo | null;
+  locationCity: LocationCity | null;
 }
 
 export interface PLPCategory {

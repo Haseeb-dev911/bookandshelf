@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useUserOldBookListing, useDeleteUserOldBookProduct } from '../quries/listing.queries';
 import { BookOldUploadMetaData } from '@/features/sellUpload/quries/upload.book.metadata.query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CirclePlus, MoreHorizontal, BookOpen, SlidersHorizontal, ArrowUpDown, Heart } from 'lucide-react';
+import { CirclePlus, MoreHorizontal, BookOpen, SlidersHorizontal, ArrowUpDown, Heart, MapPin } from 'lucide-react';
 import { showSuccess, showError } from '@/shared/utils/toast.global';
 import { Link } from 'react-router-dom';
 import { USER_ROUTES_PATH } from '@/app/router/routes.path';
@@ -139,7 +139,7 @@ export const ActiveListings = () => {
                 <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm border border-slate-200/60 shadow-sm text-[11px] font-semibold tracking-wide px-2.5 py-1 rounded-lg text-slate-700 uppercase">
                   {book.condition}
                 </span>
-                {/* ── Wishlist Heart ── */}
+                {/* Wishlist Heart */}
                 <button
                   id={`wishlist-listing-${book.id}`}
                   aria-label={wishlisted[book.id] ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -161,9 +161,14 @@ export const ActiveListings = () => {
                 <h3 className="font-playfair font-bold text-lg text-slate-900 mb-1 line-clamp-1 group-hover:text-slate-800 transition-colors">
                   {book.title}
                 </h3>
-                <p className="text-slate-400 text-xs tracking-wide uppercase font-medium mb-4">
-                  ISBN / Core Identity
-                </p>
+
+                {/* City location chip */}
+                {book.locationCity?.name && (
+                  <span className="flex items-center gap-1 text-xs text-slate-400 mb-3">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    {book.locationCity.name}
+                  </span>
+                )}
 
                 {/* Sticky Action Footer */}
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">

@@ -1,8 +1,10 @@
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, MapPin, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { WishlistItem } from "../types/wishlist.types";
 import { useRemoveFromWishlist } from "../queries/wishlist.queries";
 import { showSuccess, showError } from "@/shared/utils/toast.global";
 import libraryImg from "@/assets/images/library.png";
+import { USER_ROUTE_BUILDER } from "@/app/router/routes.path";
 
 // ─── Condition colour map ─────────────────────────────────────────────────────
 
@@ -28,6 +30,11 @@ export const WishlistBookCard = ({ item }: WishlistBookCardProps) => {
     label: item.condition,
   };
 
+  const sellerAvatar = item.seller?.setting?.profileImageUrl ?? null;
+  const sellerName   = item.seller?.name ?? "Unknown Seller";
+  const sellerId     = item.seller?.id ?? item.sellerId;
+  const cityName     = item.locationCity?.name ?? null;
+
   const handleRemove = () => {
     removeFromWishlist(item.id, {
       onSuccess: (res) => {
@@ -46,9 +53,7 @@ export const WishlistBookCard = ({ item }: WishlistBookCardProps) => {
   return (
     <article
       className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
-      style={{
-        animation: "wishlistCardIn 0.35s ease both",
-      }}
+      style={{ animation: "wishlistCardIn 0.35s ease both" }}
     >
       {/* ── Book Image ── */}
       <div className="relative aspect-[4/3] overflow-hidden bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6">
@@ -65,7 +70,7 @@ export const WishlistBookCard = ({ item }: WishlistBookCardProps) => {
           {style.label}
         </span>
 
-        {/* Remove button — top-right */}
+        {/* Remove button */}
         <button
           id={`wishlist-remove-${item.id}`}
           aria-label="Remove from wishlist"
@@ -85,6 +90,36 @@ export const WishlistBookCard = ({ item }: WishlistBookCardProps) => {
 
       {/* ── Card Details ── */}
       <div className="p-5 flex flex-col flex-1">
+        {/* Seller row */}
+        <Link
+          to={USER_ROUTE_BUILDER.sellerProfile(sellerId)}
+          className="flex items-center gap-2 mb-3 group/seller"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {sellerAvatar ? (
+            <img
+              src={sellerAvatar}
+              alt={sellerName}
+              className="w-7 h-7 rounded-full object-cover border border-slate-200 flex-shrink-0"
+            />
+          ) : (
+            <span className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
+              <User className="w-3.5 h-3.5 text-slate-400" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-700 group-hover/seller:text-slate-900 transition-colors truncate leading-none">
+              {sellerName}
+            </p>
+            {cityName && (
+              <p className="flex items-center gap-0.5 text-[10px] text-slate-400 mt-0.5 truncate">
+                <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+                {cityName}
+              </p>
+            )}
+          </div>
+        </Link>
+
         <h3 className="font-playfair font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-1 group-hover:text-slate-700 transition-colors">
           {item.title}
         </h3>

@@ -38,8 +38,8 @@ export const oldBookListingRepository = {
                         title,
                         description,
                         price,
-                        city,
-                        country,
+                        city: parseInt(city, 10),
+                        country: parseInt(country, 10),
                         condition: condition ? condition.trim() : condition,
                         customFields
                     }).returning({ id: oldBookProductModel.id });
@@ -89,8 +89,8 @@ export const oldBookListingRepository = {
                     countryName: countriesModel.name,
                 })
                 .from(userSettingModel)
-                .innerJoin(citiesModel, eq(userSettingModel.cityId, citiesModel.id))
-                .innerJoin(countriesModel, eq(citiesModel.countryId, countriesModel.id))
+                .leftJoin(citiesModel, eq(userSettingModel.cityId, citiesModel.id))
+                .leftJoin(countriesModel, eq(citiesModel.countryId, countriesModel.id))
                 .where(eq(userSettingModel.userId, userId))
                 .limit(1)
         )[0];
@@ -105,9 +105,15 @@ export const oldBookListingRepository = {
         const listings = await db.query.oldBookProductModel.findMany({
             where: (books, { and }) => and(...conditions),
             with: {
-                images: true
+                images: true,
+                seller: {
+                    with: {
+                        setting: true
+                    }
+                },
+                locationCity: true
             },
-            orderBy: (books, { desc }) => [desc(books.createdAt)]
+            orderBy: (books, { desc }) => [desc(books.createdAt)],
         });
         return listings;
     },

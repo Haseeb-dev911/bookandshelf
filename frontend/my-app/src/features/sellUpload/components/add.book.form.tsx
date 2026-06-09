@@ -113,8 +113,10 @@ export function BookUploadForm() {
   useEffect(() => {
     if (!data?.payload) return;
 
-    setValue("country", data?.payload?.locationPayload.countryId.toString());
-    setValue("city", data?.payload?.locationPayload?.cityId.toString());
+    if (data?.payload?.locationPayload) {
+      setValue("country", data.payload.locationPayload.countryId?.toString() || "");
+      setValue("city", data.payload.locationPayload.cityId?.toString() || "");
+    }
     setValue("customFields", {});
 
   }, [data, setValue]);

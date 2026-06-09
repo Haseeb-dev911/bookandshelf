@@ -56,7 +56,13 @@ export const plpRepository = {
             const listings = await db.query.oldBookProductModel.findMany({
                 where: (books, { and }) => and(...conditions),
                 with: {
-                    images: true
+                    images: true,
+                    seller: {
+                        with: {
+                            setting: true
+                        }
+                    },
+                    locationCity: true
                 },
                 orderBy: orderFn,
                 limit: search ? undefined : limit,   // if searching, fetch broader set

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Heart } from "lucide-react";
+import { Heart, MapPin, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { BookListing } from "../types/plp.types";
 import libraryImg from "../../../assets/images/library.png";
 import { wishlistService } from "../../wishlist/service/wishlist.service";
 import { showError, showSuccess } from "@/shared/utils/toast.global";
+import { USER_ROUTE_BUILDER } from "@/app/router/routes.path";
 
 // ─── Condition colour map ─────────────────────────────────────────────────────
 
@@ -14,7 +16,7 @@ const conditionStyles: Record<string, { pill: string; label: string }> = {
   poor: { pill: "bg-red-100 text-red-600 border-red-200",             label: "Poor" },
 };
 
-// ─── BookCard ─────────────────────────────────────────────────────────────────
+// ─── PLPBookCard ──────────────────────────────────────────────────────────────
 
 interface BookCardProps {
   book: BookListing;
@@ -24,7 +26,6 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
   const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
-    // On component mount, fetch the wishlist status for this book
     const fetchStatus = async () => {
       try {
         const response = await wishlistService.getWishlistStatus([book.id]);
@@ -38,8 +39,13 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
     };
     fetchStatus();
   }, [book.id]);
-  const imageUrl = book.images?.[0]?.secure_url ?? libraryImg;
-  const style    = conditionStyles[book.condition] ?? { pill: "bg-slate-100 text-slate-600 border-slate-200", label: book.condition };
+
+  const imageUrl  = book.images?.[0]?.secure_url ?? libraryImg;
+  const style     = conditionStyles[book.condition] ?? { pill: "bg-slate-100 text-slate-600 border-slate-200", label: book.condition };
+  const sellerAvatar = book.seller?.setting?.profileImageUrl ?? null;
+  const sellerName   = book.seller?.name ?? "Unknown Seller";
+  const sellerId     = book.seller?.id ?? book.sellerId;
+  const cityName     = book.locationCity?.name ?? null;
 
   return (
     <article className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
@@ -50,24 +56,19 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
         aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         onClick={async (e) => {
           e.stopPropagation();
-          // Optimistically toggle UI
           setWishlisted((prev) => !prev);
           try {
             if (!wishlisted) {
-              // currently not wishlisted, add it
               const res = await wishlistService.addToWishlist(book.id);
               showSuccess(res.message || "Added to wishlist.");
             } else {
-              // currently wishlisted, remove it
               const res = await wishlistService.removeFromWishlist(book.id);
               showSuccess(res.message || "Removed from wishlist.");
             }
           } catch (err: any) {
-            // revert UI on error
             setWishlisted((prev) => !prev);
             const errMsg = err.response?.data?.errors?.[0]?.message || err.response?.data?.message || "Something went wrong. Please try again.";
             showError(errMsg);
-            console.error("Wishlist toggle failed", err);
           }
         }}
         className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/60 shadow-sm transition-all duration-200 hover:scale-110 active:scale-95"
@@ -99,6 +100,36 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
 
       {/* ── Card Details ── */}
       <div className="p-5 flex flex-col flex-1">
+        {/* Seller row — avatar + name + city */}
+        <Link
+          to={USER_ROUTE_BUILDER.sellerProfile(sellerId)}
+          className="flex items-center gap-2 mb-3 group/seller"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {sellerAvatar ? (
+            <img
+              src={sellerAvatar}
+              alt={sellerName}
+              className="w-7 h-7 rounded-full object-cover border border-slate-200 flex-shrink-0"
+            />
+          ) : (
+            <span className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
+              <User className="w-3.5 h-3.5 text-slate-400" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-700 group-hover/seller:text-slate-900 transition-colors truncate leading-none">
+              {sellerName}
+            </p>
+            {cityName && (
+              <p className="flex items-center gap-0.5 text-[10px] text-slate-400 mt-0.5 truncate">
+                <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
+                {cityName}
+              </p>
+            )}
+          </div>
+        </Link>
+
         <h3 className="font-playfair font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-1 group-hover:text-slate-700 transition-colors">
           {book.title}
         </h3>
