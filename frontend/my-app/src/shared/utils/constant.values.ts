@@ -1,0 +1,1 @@
+export const product_condition_states = ["new ", "good", "fair", "poor"] as const;

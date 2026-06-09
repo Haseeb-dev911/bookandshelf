@@ -1,0 +1,9 @@
+nodemodules/
+**/nodemodules
+
+evn
+evn*
+
+*.log
+
+drizzle/*

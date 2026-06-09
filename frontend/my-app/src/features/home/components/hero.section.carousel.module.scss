@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+.carouselMain {
+    height: 100vh;
+    width: 100%;
+    padding: 0px 20px 0px 20px;
+
+    @media screen and (max-width:991px) {
+        height: 80vh;
+    }
+
+    @media screen and (min-width:0px) and (max-width:769px) {
+        height: 100vh;
+    }
+
+    height: max-content;
+}
+
+.heroCarosusel {
+    padding-top: 10rem;
+    padding-bottom: 3rem;
+    width: 100%;
+}
+
+.containerLarger {
+    width: 100%;
+    max-width: 100%;
+    height: max-content;
+    margin: auto;
+    display: flex;
+    // justify-content: center;
+    // align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.containerLargerChild {
+    position: relative;
+    will-change: transform;
+}
+
+.heroSectionHeading {
+    font-size: 6rem;
+    font-weight: 100;
+    font-family: "Anton", sans-serif;
+
+    @media (max-width:620px) {
+        font-size: 3rem
+    }
+
+    @media (max-width:820px) {
+        font-size: 4rem;
+    }
+}
+
+.swiperCarsouelShadow {
+    z-index: 4;
+    background-image: linear-gradient(270deg, #09080a00, #09080a 66%);
+    width: 12.375rem;
+    min-height: 27.3rem;
+    position: absolute;
+}
+
+.swiperRightShadow {
+    // bottom: 0px;
+    background: linear-gradient(90deg, #000000 34%, #09080a00);
+    left: -20px;
+    top: -2px;
+
+    @media (max-width:620px) {
+        left: -80px;
+    }
+}
+
+.swiperLeftShadow {
+    // background-image: linear-gradient(270deg, #09080a 34%, #09080a00);
+    top: -2px;
+    right: -20px;
+    background: linear-gradient(270deg, #000000 34%, #09080a00);
+
+    @media (max-width:620px) {
+        right: -80px;
+    }
+}
+
+@keyframes spreadGap {
+    0% {
+        gap: 0px;
+    }
+
+    100% {
+        gap: 65px;
+    }
+}
+
+@keyframes spreadGapMobile {
+    0% {
+        gap: 0px;
+    }
+
+    100% {
+        gap: 30px;
+    }
+}
+
+.tractImages {
+    gap: 0px;
+    animation: spreadGap 1.2s ease forwards;
+    animation-delay: 0.5s;
+
+    @media screen and (max-width:620px) {
+        animation: spreadGapMobile 1.2s ease forwards;
+        animation-delay: 0.5s;
+    }
+}
+
+.heroSectionRotate::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    left: 0%;
+    width: 100%;
+    height: 50px;
+    background: black;
+    border-bottom-left-radius: 100%;
+    border-bottom-right-radius: 100%;
+    z-index: 2;
+}
+
+.heroSectionRotate::after {
+    content: "";
+    position: absolute;
+    left: 0%;
+    bottom: 0px;
+    width: 100%;
+    height: 100px;
+    background: black;
+    border-top-left-radius: 100%;
+    border-top-right-radius: 100%;
+    z-index: 2;
+}
+
+.imageCarsuelWidth {
+    width: 200px;
+
+    @media screen and (max-width:620px) {
+        width: 160px;
+    }
+}

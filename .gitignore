@@ -1,0 +1,93 @@
+#################################
+# DEPENDENCIES
+#################################
+node_modules/
+**/node_modules/
+
+#################################
+# ENV FILES (VERY IMPORTANT)
+#################################
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# backend env
+backend/.env
+
+# frontend env (Vite/React)
+frontend/.env
+
+#################################
+# BUILD OUTPUTS
+#################################
+dist/
+build/
+out/
+
+# frontend build
+frontend/dist/
+frontend/build/
+
+# backend build (if using TS or bundlers)
+backend/dist/
+backend/build/
+
+#################################
+# LOG FILES
+#################################
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+logs/
+*.log
+
+#################################
+# OS FILES
+#################################
+.DS_Store
+Thumbs.db
+
+#################################
+# IDE / EDITORS
+#################################
+.vscode/
+.idea/
+*.swp
+*.swo
+
+#################################
+# CACHE
+#################################
+.cache/
+.parcel-cache/
+.eslintcache
+
+#################################
+# TEST COVERAGE
+#################################
+coverage/
+
+#################################
+# OPTIONAL: FRONTEND FRAMEWORKS
+#################################
+
+# Vite
+frontend/.vite/
+
+# React (CRA)
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+#################################
+# OPTIONAL: BACKEND
+#################################
+
+backend/node_modules/
+backend/.env.*
+backend/drizzle/
+backend/drizzle/*

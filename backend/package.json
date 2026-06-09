@@ -1,0 +1,43 @@
+{
+  "name": "book_shelf",
+  "version": "1.0.0",
+  "description": "Book&Shelf backend",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "drizzle:gen": "npx drizzle-kit generate",
+    "drizzle:mig": "node src/db/migrate.drizzle.js",
+    "db:seed:oldProduct": "node src/seedDB/seed.old.book.product.js",
+    "db:location": "node src/db/seed.locations.db.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.9.0",
+    "cookie": "^1.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.1",
+    "google-auth-library": "^10.6.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.4",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.1",
+    "pg": "^8.20.0",
+    "rate-limit-redis": "^5.0.0",
+    "redis": "^5.12.1",
+    "socket.io": "^4.8.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
+  }
+}
