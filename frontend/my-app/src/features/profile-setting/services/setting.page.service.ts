@@ -34,8 +34,9 @@ export const settingService = {
         const response = await api.patch(endpoints.updateProfile, formData);
         return response.data;
     },
-    getUploadSignature: async () => {
-        const response = await api.get(endpoints.getUploadSignature);
+    getUploadSignature: async (folder?: string) => {
+        const query = folder ? `?folder=${encodeURIComponent(folder)}` : "";
+        const response = await api.get(`${endpoints.getUploadSignature}${query}`);
         return response.data;
     },
     uploadCloudinaryViaSignature: async (cloudName: string,

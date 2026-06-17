@@ -21,6 +21,11 @@ export const listingService = {
         return response.data;
     },
 
+    markListingAsSold: async (bookId: string) => {
+        const response = await api.patch(`/old-book/listing/${bookId}/sold`);
+        return response.data;
+    },
+
     getAllActiveBookListings: async (categoryId?: string) => {
         const url = categoryId
             ? `${endpoints.getAllActiveListings}?categoryId=${categoryId}`

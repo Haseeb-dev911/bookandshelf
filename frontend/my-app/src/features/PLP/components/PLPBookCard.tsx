@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Heart, MapPin, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { BookListing } from "../types/plp.types";
 import libraryImg from "../../../assets/images/library.png";
 import { wishlistService } from "../../wishlist/service/wishlist.service";
@@ -24,6 +24,7 @@ interface BookCardProps {
 
 export const PLPBookCard = ({ book }: BookCardProps) => {
   const [wishlisted, setWishlisted] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -40,15 +41,26 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
     fetchStatus();
   }, [book.id]);
 
+  const isEbook = book.isEbook;
   const imageUrl  = book.images?.[0]?.secure_url ?? libraryImg;
-  const style     = conditionStyles[book.condition] ?? { pill: "bg-slate-100 text-slate-600 border-slate-200", label: book.condition };
+  const style     = isEbook 
+    ? { pill: "bg-violet-100 text-violet-700 border-violet-200 font-bold", label: "E-Book" }
+    : (conditionStyles[book.condition || ""] ?? { pill: "bg-slate-100 text-slate-600 border-slate-200", label: book.condition || "" });
   const sellerAvatar = book.seller?.setting?.profileImageUrl ?? null;
   const sellerName   = book.seller?.name ?? "Unknown Seller";
   const sellerId     = book.seller?.id ?? book.sellerId;
   const cityName     = book.locationCity?.name ?? null;
 
+  const originalPrice = Number(book.price);
+  const discount = book.discountPercentage || 0;
+  const hasDiscount = isEbook && discount > 0;
+  const finalPrice = hasDiscount ? originalPrice - (originalPrice * discount / 100) : originalPrice;
+
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+    <article 
+      onClick={() => navigate(USER_ROUTE_BUILDER.product(book.id))}
+      className="group relative bg-white rounded-2xl overflow-hidden border border-slate-200/70 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
+    >
 
       {/* ── Wishlist Heart Button ── */}
       <button
@@ -90,12 +102,17 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
           loading="lazy"
           className="max-w-full max-h-full object-contain drop-shadow-md group-hover:scale-[1.05] transition-transform duration-500"
         />
-        {/* Condition badge */}
+        {/* Condition / Type badge */}
         <span
           className={`absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border ${style.pill}`}
         >
           {style.label}
         </span>
+        {hasDiscount && (
+          <span className="absolute top-3 right-14 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border bg-rose-500 text-white border-rose-600 shadow-sm animate-pulse">
+            -{discount}%
+          </span>
+        )}
       </div>
 
       {/* ── Card Details ── */}
@@ -121,7 +138,7 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
             <p className="text-xs font-semibold text-slate-700 group-hover/seller:text-slate-900 transition-colors truncate leading-none">
               {sellerName}
             </p>
-            {cityName && (
+            {cityName && !isEbook && (
               <p className="flex items-center gap-0.5 text-[10px] text-slate-400 mt-0.5 truncate">
                 <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
                 {cityName}
@@ -130,9 +147,13 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
           </div>
         </Link>
 
-        <h3 className="font-playfair font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-1 group-hover:text-slate-700 transition-colors">
+        <h3 className="font-playfair font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-0.5 group-hover:text-slate-700 transition-colors">
           {book.title}
         </h3>
+        
+        {book.author && (
+          <p className="text-xs text-slate-500 mb-2 truncate">by {book.author}</p>
+        )}
 
         {book.description && (
           <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-4">
@@ -146,9 +167,16 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
               Price
             </span>
-            <span className="font-bold text-xl text-slate-900">
-              ${Number(book.price).toFixed(2)}
-            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-bold text-xl text-slate-900">
+                ${finalPrice.toFixed(2)}
+              </span>
+              {hasDiscount && (
+                <span className="text-xs font-semibold text-slate-400 line-through">
+                  ${originalPrice.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* CTA */}

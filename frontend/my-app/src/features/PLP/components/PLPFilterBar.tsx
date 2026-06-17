@@ -15,6 +15,12 @@ const CONDITIONS = [
   { value: "poor", label: "Poor" },
 ];
 
+const TYPES = [
+  { value: "all", label: "All Types" },
+  { value: "ebook", label: "E-Books" },
+  { value: "physical", label: "Physical Books" },
+];
+
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "newest",     label: "Recently Added" },
   { value: "price_asc",  label: "Price: Low to High" },
@@ -48,6 +54,23 @@ export const PLPFilterBar = ({ filters, categories, onFilterChange }: PLPFilterB
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ── Type filter ── */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-slate-700">Type:</span>
+            <select
+              id="filter-type"
+              value={filters.type || "all"}
+              onChange={(e) => onFilterChange("type", e.target.value)}
+              className={`${selectClass} min-w-[140px]`}
+            >
+              {TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
                 </option>
               ))}
             </select>

@@ -25,9 +25,9 @@ export const WishlistBookCard = ({ item }: WishlistBookCardProps) => {
   const { mutate: removeFromWishlist, isPending } = useRemoveFromWishlist();
 
   const imageUrl = item.images?.[0]?.secure_url ?? libraryImg;
-  const style = conditionStyles[item.condition] ?? {
+  const style = conditionStyles[item.condition || ""] ?? {
     pill: "bg-slate-100 text-slate-600 border-slate-200",
-    label: item.condition,
+    label: item.condition || "Unknown",
   };
 
   const sellerAvatar = item.seller?.setting?.profileImageUrl ?? null;

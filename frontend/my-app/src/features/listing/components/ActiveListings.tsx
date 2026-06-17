@@ -1,6 +1,6 @@
 import libraryImg from '../../../assets/images/library.png';
 import { useState } from 'react';
-import { useUserOldBookListing, useDeleteUserOldBookProduct } from '../quries/listing.queries';
+import { useUserOldBookListing, useDeleteUserOldBookProduct, useMarkListingAsSold } from '../quries/listing.queries';
 import { BookOldUploadMetaData } from '@/features/sellUpload/quries/upload.book.metadata.query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CirclePlus, MoreHorizontal, BookOpen, SlidersHorizontal, ArrowUpDown, Heart, MapPin } from 'lucide-react';
@@ -23,6 +23,7 @@ export const ActiveListings = () => {
 
   const { data } = useUserOldBookListing(selectedCategory);
   const deleteMutation = useDeleteUserOldBookProduct();
+  const markSoldMutation = useMarkListingAsSold();
 
   const listings = Array.isArray(data?.payload) ? data.payload : [];
 
@@ -38,6 +39,13 @@ export const ActiveListings = () => {
     
     await queryClient.invalidateQueries({
       queryKey: ["user-old-book-listings"],
+    });
+  };
+
+  const handleMarkSold = async (bookId: string) => {
+    markSoldMutation.mutate(bookId, {
+      onSuccess: () => showSuccess("Listing marked as sold successfully."),
+      onError: () => showError("Failed to mark listing as sold.")
     });
   };
 
@@ -158,9 +166,13 @@ export const ActiveListings = () => {
 
               {/* Information Body */}
               <div className="p-5 flex flex-col flex-1">
-                <h3 className="font-playfair font-bold text-lg text-slate-900 mb-1 line-clamp-1 group-hover:text-slate-800 transition-colors">
+                <h3 className="font-playfair font-bold text-lg text-slate-900 mb-0.5 line-clamp-1 group-hover:text-slate-800 transition-colors">
                   {book.title}
                 </h3>
+                
+                {book.author && (
+                  <p className="text-xs text-slate-500 mb-1 truncate">by {book.author}</p>
+                )}
 
                 {/* City location chip */}
                 {book.locationCity?.name && (
@@ -193,6 +205,12 @@ export const ActiveListings = () => {
                         onClick={() => { /* Edit Handler */ }}
                       >
                         Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer font-medium text-sm text-slate-700 focus:bg-slate-50 focus:text-slate-900 px-3 py-2 rounded-lg"
+                        onClick={() => handleMarkSold(book.id)}
+                      >
+                        {markSoldMutation.isPending ? "Marking..." : "Mark as Sold"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="cursor-pointer text-red-600 font-medium text-sm focus:bg-red-50 focus:text-red-700 px-3 py-2 rounded-lg"

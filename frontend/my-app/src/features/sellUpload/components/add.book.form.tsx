@@ -260,6 +260,14 @@ export function BookUploadForm() {
                   {...register("title")} />
               </div >
 
+              {/* --- Book Author --- */}
+              < div >
+                <Input
+                  label="Enter the author"
+                  error={errors?.author?.message}
+                  {...register("author")} />
+              </div >
+
               {/* --- Simple Description --- */}
               < div >
                 <label className="block text-xs font-bold tracking-wider uppercase text-gray-700 mb-2">Description & Condition</label>

@@ -152,7 +152,7 @@ export const SellerProfilePage = () => {
                 poor: "bg-red-100 text-red-600 border-red-200",
               };
               const conditionStyle =
-                conditionColors[book.condition] ??
+                conditionColors[book.condition || ""] ??
                 "bg-slate-100 text-slate-600 border-slate-200";
 
               return (

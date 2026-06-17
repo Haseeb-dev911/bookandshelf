@@ -8,6 +8,7 @@ import {
   SearchIcon,
   SettingsIcon,
   UserIcon,
+  ShieldIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,14 @@ export function Header() {
                       Settings
                     </DropdownMenuItem>
                   </Link>
+                  {data.payload.role === "admin" && (
+                    <Link to={USER_ROUTES_PATH.admin}>
+                      <DropdownMenuItem className='text-[17px] cursor-pointer text-violet-700 hover:text-violet-800 hover:bg-violet-50'>
+                        <ShieldIcon />
+                        Admin Panel
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className='text-[17px] cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50'
