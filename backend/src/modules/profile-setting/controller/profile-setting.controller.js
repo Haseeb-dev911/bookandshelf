@@ -37,7 +37,8 @@ export const updateUserProfileController = async (req, res, next) => {
 
 export const getProfileUploadSignatureController = async (req, res, next) => {
     try {
-        const result = getProfileUploadSignatureService();
+        const folder = req.query.folder;
+        const result = getProfileUploadSignatureService(folder);
         return res.status(200).json(result);
     } catch (error) {
         next(error);

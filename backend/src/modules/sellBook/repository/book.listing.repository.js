@@ -6,6 +6,7 @@ import { citiesModel } from "../../../db/models/cites.schema.js";
 import { countriesModel } from "../../../db/models/countries.schema.js";
 import { oldBookProductImagesModel, oldBookProductModel } from "../../../db/models/old.book.product.schema.js";
 import { userSettingModel } from "../../../db/models/user.setting.schema.js";
+import { wishlistModel } from "../../../db/models/wishlist.schema.js";
 
 import { AppError } from "../../../error/App.error.js";
 
@@ -24,7 +25,7 @@ export const oldBookListingRepository = {
     oldBookAddListing: async (formData, userId) => {
         try {
 
-            const { categoryId, title, description, price, city, country,
+            const { categoryId, title, author, description, price, city, country,
                 condition,
                 customFields,
                 images
@@ -36,6 +37,7 @@ export const oldBookListingRepository = {
                         sellerId: userId,
                         categoryId,
                         title,
+                        author,
                         description,
                         price,
                         city: parseInt(city, 10),
@@ -149,6 +151,27 @@ export const oldBookListingRepository = {
                 await cloudinaryDeleteFn(book.images);
             }
         });
+    },
+
+    markListingAsSold: async (bookId, userId) => {
+        await db.transaction(async (tx) => {
+            // Check ownership and existence
+            const book = await tx.query.oldBookProductModel.findFirst({
+                where: (books, { and, eq }) => and(eq(books.id, bookId), eq(books.sellerId, userId))
+            });
+
+            if (!book) throw new AppError("Listing not found or unauthorized", 404, [{ field: "root", message: "Listing not found or unauthorized" }]);
+
+            // Update status to sold
+            await tx.update(oldBookProductModel)
+                .set({ status: "sold" })
+                .where(eq(oldBookProductModel.id, bookId));
+
+            // Delete from any wishlist
+            await tx.delete(wishlistModel)
+                .where(eq(wishlistModel.bookId, bookId));
+        });
+        return { success: true, message: "Listing marked as sold successfully" };
     }
 
 }

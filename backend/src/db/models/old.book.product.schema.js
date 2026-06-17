@@ -1,4 +1,4 @@
-import { uuid, pgTable, jsonb, pgEnum, varchar, text, integer, numeric } from "drizzle-orm/pg-core";
+import { uuid, pgTable, jsonb, pgEnum, varchar, text, integer, numeric, boolean } from "drizzle-orm/pg-core";
 
 import { userAccountModel } from "./user.account.schema.js";
 import { categoriesModel } from "./category.book.schema.js";
@@ -36,15 +36,19 @@ export const oldBookProductModel = pgTable("old_book_product", {
         length: 255,
     }).notNull(),
 
+    author: varchar("author", {
+        length: 255,
+    }).notNull().default("Unknown"),
+
     description: text("description"),
 
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
 
-    city: integer("city").notNull().references(() => citiesModel.id),
+    city: integer("city").references(() => citiesModel.id),
 
-    country: integer("country").notNull().references(() => countriesModel.id),
+    country: integer("country").references(() => countriesModel.id),
 
-    condition: bookConditionEnum("condition").notNull(),
+    condition: bookConditionEnum("condition"),
 
     status: listingStatusEnum("status")
         .default("active")
@@ -53,6 +57,14 @@ export const oldBookProductModel = pgTable("old_book_product", {
     customFields: jsonb("custom_fields")
         .$type()
         .notNull(),
+
+    isEbook: boolean("is_ebook").default(false).notNull(),
+
+    discountPercentage: integer("discount_percentage").default(0).notNull(),
+
+    pdfUrl: text("pdf_url"),
+
+    pdfPublicId: varchar("pdf_public_id", { length: 255 }),
 
     ...timeStamps
 });

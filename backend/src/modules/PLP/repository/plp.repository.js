@@ -14,6 +14,7 @@ export const plpRepository = {
      * @param {object} opts
      * @param {string|null}  opts.categoryId  - filter by category UUID
      * @param {string|null}  opts.condition   - 'new' | 'good' | 'fair' | 'poor'
+     * @param {string|null}  opts.type        - 'all' | 'ebook' | 'physical'
      * @param {string|null}  opts.search      - free-text search on title / description
      * @param {string}       opts.sortBy      - 'newest' | 'price_asc' | 'price_desc'
      * @param {number}       opts.limit       - page size (default 12)
@@ -22,6 +23,7 @@ export const plpRepository = {
     getAllActiveListings: async ({
         categoryId = null,
         condition = null,
+        type = "all",
         search = null,
         sortBy = "newest",
         limit = 12,
@@ -29,6 +31,12 @@ export const plpRepository = {
     } = {}) => {
         try {
             const conditions = [eq(oldBookProductModel.status, "active")];
+
+            if (type === "ebook") {
+                conditions.push(eq(oldBookProductModel.isEbook, true));
+            } else if (type === "physical") {
+                conditions.push(eq(oldBookProductModel.isEbook, false));
+            }
 
             if (categoryId) {
                 conditions.push(eq(oldBookProductModel.categoryId, categoryId));

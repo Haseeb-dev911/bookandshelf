@@ -162,3 +162,18 @@ export const deleteUserOldBookProductService = async (bookId, userId) => {
         );
     }
 }
+
+export const markUserOldBookProductSoldService = async (bookId, userId) => {
+    try {
+        const result = await oldBookListingRepository.markListingAsSold(bookId, userId);
+        return result;
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) throw error;
+
+        throw new AppError("Failed to mark listing as sold.",
+            500,
+            [{ field: "root", message: "Failed to mark listing as sold." }],
+        );
+    }
+}

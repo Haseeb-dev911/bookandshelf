@@ -10,6 +10,7 @@ export const profileSettingRepository = {
             .select({
                 name: userAccountModel.name,
                 email: userAccountModel.email,
+                role: userAccountModel.role,
                 description: userSettingModel.description,
                 cityId: userSettingModel.cityId,
                 countryId: citiesModel.countryId,

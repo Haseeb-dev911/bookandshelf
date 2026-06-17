@@ -116,6 +116,12 @@ export const authRepostory = {
         return await db.query.userAccountModel.findFirst({
             where: eq(userAccountModel.id, userId),
         });
+    },
+
+    upgradeUserToAdmin: async (userId) => {
+        await db.update(userAccountModel)
+            .set({ role: "admin" })
+            .where(eq(userAccountModel.id, userId));
     }
 }
 

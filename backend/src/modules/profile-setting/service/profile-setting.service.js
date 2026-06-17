@@ -35,10 +35,10 @@ export const updateUserProfileService = async (userId, data) => {
     }
 };
 
-export const getProfileUploadSignatureService = () => {
+export const getProfileUploadSignatureService = (requestedFolder) => {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
-        const folder = "profile_images";
+        const folder = requestedFolder || "profile_images";
 
         const params_to_assign = { timestamp, folder };
 

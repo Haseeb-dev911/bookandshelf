@@ -37,6 +37,11 @@ export const bookListingAddValidationSchema = z.object({
         .min(3, "Title must be at least 3 characters long")
         .max(254, "Title must be 254 characters or fewer"),
 
+    author: z.string({ required_error: "Author is required" })
+        .trim()
+        .min(2, "Author must be at least 2 characters long")
+        .max(254, "Author must be 254 characters or fewer"),
+
     description: z.string()
         .trim()
         .min(10, "Minimum description of is required")
