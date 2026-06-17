@@ -9,6 +9,7 @@ export const getAllActiveListingsController = async (req, res, next) => {
         const {
             categoryId = null,
             condition = null,
+            type = "all",
             search = null,
             sortBy = "newest",
             page = "1",
@@ -22,6 +23,7 @@ export const getAllActiveListingsController = async (req, res, next) => {
         const result = await getAllActiveListingsService({
             categoryId: categoryId || null,
             condition:  condition  || null,
+            type,
             search:     search     || null,
             sortBy,
             limit: limitNum,

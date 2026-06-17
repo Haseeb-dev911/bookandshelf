@@ -22,7 +22,8 @@ import {
     signupVerifyTokenController,
     updatePasswordResetPageController,
     verifypasswordOtpPageSessionController,
-    verifypasswordSessionPageController
+    verifypasswordSessionPageController,
+    logoutUserController
 } from "../controllers/auth.controller.js";
 
 import { getLoginSignupRateLimiter, getPasswordResetRequest, getTokenRateLimiter, useLimiter } from "../utils/auth.rate.limiter.js";
@@ -93,4 +94,7 @@ authRouter.get("/password-reset/password/:sessionId",
     verifySessionPasswordParms,
     verifypasswordSessionPageController
 );
+
+authRouter.post("/logout", logoutUserController);
+
 export default authRouter;

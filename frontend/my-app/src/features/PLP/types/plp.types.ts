@@ -13,21 +13,44 @@ export interface BookImage {
   resource_type: string;
 }
 
+export interface SellerSetting {
+  profileImageUrl: string | null;
+}
+
+export interface SellerInfo {
+  id: string;
+  name: string;
+  email: string;
+  setting: SellerSetting | null;
+}
+
+export interface LocationCity {
+  id: number;
+  name: string;
+}
+
 export interface BookListing {
   id: string;
   sellerId: string;
   categoryId: string;
   title: string;
+  author: string;
   description: string | null;
   price: number;
-  city: number;
-  country: number;
-  condition: BookCondition;
+  city: number | null;
+  country: number | null;
+  condition: BookCondition | null;
   status: ListingStatus;
   customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   images: BookImage[];
+  seller: SellerInfo | null;
+  locationCity: LocationCity | null;
+  isEbook: boolean;
+  discountPercentage?: number;
+  pdfUrl?: string | null;
+  pdfPublicId?: string | null;
 }
 
 export interface PLPCategory {
@@ -62,7 +85,8 @@ export interface PLPCategoriesResponse {
 
 export interface PLPFilters {
   categoryId: string;
-  condition: string;       // '' | BookCondition
+  condition: string;
+  type: "all" | "ebook" | "physical";
   search: string;
   sortBy: SortOption;
 }

@@ -20,6 +20,7 @@ export const plpService = {
         const {
             categoryId = "",
             condition  = "",
+            type       = "all",
             search     = "",
             sortBy     = "newest",
             page       = 1,
@@ -29,6 +30,7 @@ export const plpService = {
         const queryParams = new URLSearchParams();
         if (categoryId) queryParams.set("categoryId", categoryId);
         if (condition)  queryParams.set("condition",  condition);
+        if (type !== "all") queryParams.set("type", type);
         if (search)     queryParams.set("search",     search);
         if (sortBy)     queryParams.set("sortBy",     sortBy);
         queryParams.set("page",  String(page));

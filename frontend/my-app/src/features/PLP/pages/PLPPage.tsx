@@ -40,6 +40,7 @@ export const PLPPage = () => {
   const [filters, setFilters] = useState<PLPFilters>({
     categoryId: "",
     condition:  "",
+    type: "all",
     search:     "",
     sortBy:     "newest",
   });

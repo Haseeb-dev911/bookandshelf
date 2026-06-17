@@ -8,8 +8,12 @@ import { ListingsPage } from '@/features/listing';
 import { PLPPage } from '@/features/PLP';
 import { BookListingPage } from '@/features/sellUpload';
 import { USER_ROUTES_PATH } from './routes.path';
-import { ProfileSettingsPage } from '@/features/profile_settings/pages/ProfileSettingsPage';
+import { ProfileSettingsPage } from '@/features/profile-setting/pages/ProfileSettingsPage';
 import { WishlistPage } from '@/features/wishlist';
+import { SellerProfilePage } from '@/features/seller-profile';
+import { ProductPage } from '@/features/Product-page';
+import { AdminGuard } from '@/features/admin/routes/Admin.guard';
+import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
 
 export const MianRouter = createBrowserRouter([
   {
@@ -42,6 +46,22 @@ export const MianRouter = createBrowserRouter([
   {
     path: USER_ROUTES_PATH.wishlist,
     element: <WishlistPage />
+  },
+  {
+    path: USER_ROUTES_PATH.sellerProfile,
+    element: <SellerProfilePage />
+  },
+  {
+    path: USER_ROUTES_PATH.product,
+    element: <ProductPage />
+  },
+  {
+    path: USER_ROUTES_PATH.admin,
+    element: (
+      <AdminGuard>
+        <AdminDashboard />
+      </AdminGuard>
+    )
   }
 
 ]);

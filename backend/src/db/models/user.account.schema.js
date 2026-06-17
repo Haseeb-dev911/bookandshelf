@@ -1,4 +1,6 @@
 import { pgEnum, pgTable, text, serial, boolean, varchar, uuid } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { userSettingModel } from "./user.setting.schema.js";
 import { timeStamps } from "./utils/timestamps.common.js";
 
 export const userStatus = pgEnum("status", [
@@ -42,3 +44,10 @@ export const userAccountModel = pgTable("users_account", {
 
     ...timeStamps
 });
+
+export const userAccountRelations = relations(userAccountModel, ({ one }) => ({
+    setting: one(userSettingModel, {
+        fields: [userAccountModel.id],
+        references: [userSettingModel.userId],
+    }),
+}));

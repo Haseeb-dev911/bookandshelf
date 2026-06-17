@@ -19,5 +19,13 @@ export const USER_ROUTES_PATH = {
   uploadBookToSell: "/sell/upload",
   setting: "/setting",
   browse: "/browse",
-  wishlist: "/wishlist"
+  wishlist: "/wishlist",
+  sellerProfile: "/seller/:sellerId",
+  product: "/product/:bookId",
+  admin: "/admin",
+};
+
+export const USER_ROUTE_BUILDER = {
+  sellerProfile: (sellerId: string) => `/seller/${sellerId}`,
+  product: (bookId: string) => `/product/${bookId}`,
 };

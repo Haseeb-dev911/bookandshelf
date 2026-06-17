@@ -12,7 +12,8 @@ import {
     oldBookProductAddController,
     validateAssetsRedisController,
     getUserOldBookListingController,
-    deleteUserOldBookProductController
+    deleteUserOldBookProductController,
+    markUserOldBookProductSoldController
 } from "../controller/book.listing.controller.js";
 
 
@@ -49,6 +50,11 @@ userOldBookProductRouter.get("/listing",
 userOldBookProductRouter.delete("/listing/:bookId",
     validateuserMiddleware,
     deleteUserOldBookProductController
+);
+
+userOldBookProductRouter.patch("/listing/:bookId/sold",
+    validateuserMiddleware,
+    markUserOldBookProductSoldController
 );
 
 export default userOldBookProductRouter;

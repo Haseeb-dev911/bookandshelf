@@ -21,6 +21,18 @@ export const useDeleteUserOldBookProduct = () => {
     });
 };
 
+export const useMarkListingAsSold = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: listingService.markListingAsSold,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-old-book-listings"] });
+            queryClient.invalidateQueries({ queryKey: ["plp-all-active-listings"] });
+        }
+    });
+};
+
 export const useAllActiveBookListings = (categoryId?: string) => {
     return useQuery({
         queryKey: ["plp-all-active-listings", categoryId],

@@ -1,9 +1,9 @@
 import libraryImg from '../../../assets/images/library.png';
 import { useState } from 'react';
-import { useUserOldBookListing, useDeleteUserOldBookProduct } from '../quries/listing.queries';
+import { useUserOldBookListing, useDeleteUserOldBookProduct, useMarkListingAsSold } from '../quries/listing.queries';
 import { BookOldUploadMetaData } from '@/features/sellUpload/quries/upload.book.metadata.query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CirclePlus, MoreHorizontal, BookOpen, SlidersHorizontal, ArrowUpDown, Heart } from 'lucide-react';
+import { CirclePlus, MoreHorizontal, BookOpen, SlidersHorizontal, ArrowUpDown, Heart, MapPin } from 'lucide-react';
 import { showSuccess, showError } from '@/shared/utils/toast.global';
 import { Link } from 'react-router-dom';
 import { USER_ROUTES_PATH } from '@/app/router/routes.path';
@@ -23,6 +23,7 @@ export const ActiveListings = () => {
 
   const { data } = useUserOldBookListing(selectedCategory);
   const deleteMutation = useDeleteUserOldBookProduct();
+  const markSoldMutation = useMarkListingAsSold();
 
   const listings = Array.isArray(data?.payload) ? data.payload : [];
 
@@ -38,6 +39,13 @@ export const ActiveListings = () => {
     
     await queryClient.invalidateQueries({
       queryKey: ["user-old-book-listings"],
+    });
+  };
+
+  const handleMarkSold = async (bookId: string) => {
+    markSoldMutation.mutate(bookId, {
+      onSuccess: () => showSuccess("Listing marked as sold successfully."),
+      onError: () => showError("Failed to mark listing as sold.")
     });
   };
 
@@ -139,7 +147,7 @@ export const ActiveListings = () => {
                 <span className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm border border-slate-200/60 shadow-sm text-[11px] font-semibold tracking-wide px-2.5 py-1 rounded-lg text-slate-700 uppercase">
                   {book.condition}
                 </span>
-                {/* ── Wishlist Heart ── */}
+                {/* Wishlist Heart */}
                 <button
                   id={`wishlist-listing-${book.id}`}
                   aria-label={wishlisted[book.id] ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -158,12 +166,21 @@ export const ActiveListings = () => {
 
               {/* Information Body */}
               <div className="p-5 flex flex-col flex-1">
-                <h3 className="font-playfair font-bold text-lg text-slate-900 mb-1 line-clamp-1 group-hover:text-slate-800 transition-colors">
+                <h3 className="font-playfair font-bold text-lg text-slate-900 mb-0.5 line-clamp-1 group-hover:text-slate-800 transition-colors">
                   {book.title}
                 </h3>
-                <p className="text-slate-400 text-xs tracking-wide uppercase font-medium mb-4">
-                  ISBN / Core Identity
-                </p>
+                
+                {book.author && (
+                  <p className="text-xs text-slate-500 mb-1 truncate">by {book.author}</p>
+                )}
+
+                {/* City location chip */}
+                {book.locationCity?.name && (
+                  <span className="flex items-center gap-1 text-xs text-slate-400 mb-3">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    {book.locationCity.name}
+                  </span>
+                )}
 
                 {/* Sticky Action Footer */}
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
@@ -188,6 +205,12 @@ export const ActiveListings = () => {
                         onClick={() => { /* Edit Handler */ }}
                       >
                         Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer font-medium text-sm text-slate-700 focus:bg-slate-50 focus:text-slate-900 px-3 py-2 rounded-lg"
+                        onClick={() => handleMarkSold(book.id)}
+                      >
+                        {markSoldMutation.isPending ? "Marking..." : "Mark as Sold"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="cursor-pointer text-red-600 font-medium text-sm focus:bg-red-50 focus:text-red-700 px-3 py-2 rounded-lg"

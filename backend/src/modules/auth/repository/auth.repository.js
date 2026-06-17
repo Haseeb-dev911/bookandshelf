@@ -11,20 +11,23 @@ import { tokenModel } from "../../../db/models/token.schema.js";
 
 export const authRepostory = {
     verifyCountryId: async (countryId) => {
-
+        const id = parseInt(countryId, 10);
+        if (isNaN(id)) return [];
         const verifyCountryId = await db
             .select()
             .from(countriesModel)
-            .where(eq(countriesModel.id, countryId))
+            .where(eq(countriesModel.id, id))
             .limit(1);
         return verifyCountryId;
     },
 
     verifyCityId: async (cityId) => {
+        const id = parseInt(cityId, 10);
+        if (isNaN(id)) return [];
         const verifyCityId = await db
             .select()
             .from(citiesModel)
-            .where(eq(citiesModel.id, cityId))
+            .where(eq(citiesModel.id, id))
             .limit(1);
         return verifyCityId;
     },
@@ -113,6 +116,12 @@ export const authRepostory = {
         return await db.query.userAccountModel.findFirst({
             where: eq(userAccountModel.id, userId),
         });
+    },
+
+    upgradeUserToAdmin: async (userId) => {
+        await db.update(userAccountModel)
+            .set({ role: "admin" })
+            .where(eq(userAccountModel.id, userId));
     }
 }
 

@@ -226,4 +226,29 @@ export const verifypasswordSessionPageController = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+}
+
+export const logoutUserController = async (req, res, next) => {
+    try {
+        res.clearCookie("book_shelf_token", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            path: "/"
+        });
+        res.clearCookie("tokenAuth", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            path: "/"
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
+            errors: null,
+            payload: null
+        });
+    } catch (error) {
+        next(error);
+    }
 } 

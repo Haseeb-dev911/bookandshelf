@@ -1,41 +1,65 @@
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-
+import { useQueryClient } from "@tanstack/react-query";
 import { detailsSettingFormSchema, type DetailsFormInputs } from "../types/profile.types";
-
 import { Button } from "@/shared/components/Button.component";
 import { Input } from "@/shared/components/Input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useProfileDataQuery } from "../services/query.service";
 import { useCities } from "@/quries/locations.query";
 import { SearchableSelect } from "@/shared/components/select.options";
+import { settingService } from "../services/setting.page.service";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { formatFormHookErrors } from "@/shared/utils/format.formhook.errors";
 
 function DetailsForm() {
-
   const { data } = useProfileDataQuery();
-  console.log(data);
+  const queryClient = useQueryClient();
 
-  const { data: cities = [] } = useCities(data?.payload.cityId || "");
+  // Query cities based on the countryId fetched with the profile
+  const countryIdStr = data?.payload?.countryId?.toString() || "";
+  const { data: cities = [] } = useCities(countryIdStr);
 
   const {
     register,
     handleSubmit,
-    // setValue,
+    setValue,
     control,
+    setError,
     formState: { errors, isSubmitting }
   } = useForm<DetailsFormInputs>({
     resolver: zodResolver(detailsSettingFormSchema),
-
   });
 
+  // Prefill default values when profile data is loaded
+  useEffect(() => {
+    if (data?.payload) {
+      setValue("name", data.payload.name || "");
+      setValue("description", data.payload.description || "");
+      setValue("city", data.payload.cityId?.toString() || "");
+    }
+  }, [data, setValue]);
 
-  const handleDetailsSubmit = async (data: DetailsFormInputs) => {
+  const handleDetailsSubmit = async (formData: DetailsFormInputs) => {
     try {
-      console.log("Details Data:", data);
-
-      // await updateProfile(data);
+      toast.loading("Saving changes...", { id: "details-update" });
+      
+      await settingService.updateProfileDetails(formData);
+      
+      await queryClient.invalidateQueries({ queryKey: ["profileData"] });
+      toast.success("Profile details updated successfully!", { id: "details-update" });
     } catch (error: any) {
-      console.error("Details Error:", error);
-      // toast.error(error?.message)
+      console.error("Details update error:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error("Failed to update profile. Please verify your inputs.", { id: "details-update" });
+        return formatFormHookErrors(error, setError);
+      }
+      
+      toast.error(error?.message || "Something went wrong. Please try again.", { id: "details-update" });
+      setError("root", {
+        message: "Server is currently busy or unreachable. Please try again later."
+      });
     }
   };
 
@@ -57,7 +81,6 @@ function DetailsForm() {
         error={errors.description?.message}
         {...register("description")}
       />
-
 
       <div>
         <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5"
@@ -91,6 +114,6 @@ function DetailsForm() {
       </Button>
     </form >
   );
-};
+}
 
 export default DetailsForm;

