@@ -63,7 +63,7 @@ export function Header() {
         {/* Search Bar */}
         <div className="hidden md:flex md:flex-1 max-w relative">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <SearchIcon className='h-4 w-4' color='#9ca3af' />
+            <SearchIcon className="h-4 w-4" color="#9ca3af" />
           </div>
           <input
             className="w-full bg-transparent border border-surface-dim rounded-full py-2 pl-11 pr-4 text-[14px] text-gray-700 focus:outline-none focus:border-[var(--foreground)] placeholder-gray-400"
@@ -72,21 +72,47 @@ export function Header() {
           />
         </div>
 
-
         <div className="flex items-center gap-5 shrink-0 text-gray-600 relative">
           {isLoggedIn && (
             <>
-              <Link to={USER_ROUTES_PATH.wishlist} className="hover:text-mahogany transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              <Link
+                to={USER_ROUTES_PATH.wishlist}
+                className="hover:text-mahogany transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  ></path>
                 </svg>
               </Link>
-
-              <button className="hover:text-mahogany transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </button>
+              <Link
+                to={USER_ROUTES_PATH.cart}
+                className="hover:text-mahogany transition-colors"
+              >
+                <button className="hover:text-mahogany transition-colors">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    ></path>
+                  </svg>
+                </button>
+              </Link>
             </>
           )}
 
@@ -94,34 +120,48 @@ export function Header() {
             {isLoggedIn ? (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="rounded-full overflow-hidden p-0 h-10 w-10 border border-gray-200 cursor-pointer">
-                    <img src={data.payload.profileImageUrl || defaultImg} alt="User profile" className="h-full w-full object-cover" />
+                  <Button
+                    variant="outline"
+                    className="rounded-full overflow-hidden p-0 h-10 w-10 border border-gray-200 cursor-pointer"
+                  >
+                    <img
+                      src={data.payload.profileImageUrl || defaultImg}
+                      alt="User profile"
+                      className="h-full w-full object-cover"
+                    />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 overflow-hidden text-[17px]">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 overflow-hidden text-[17px]"
+                >
                   <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{data.payload.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{data.payload.email}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate">
+                      {data.payload.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {data.payload.email}
+                    </p>
                   </div>
-                  <Link to="/cart">
-                    <DropdownMenuItem className='text-[17px] cursor-pointer'>
+                  <Link to={USER_ROUTES_PATH.cart}>
+                    <DropdownMenuItem className="text-[17px] cursor-pointer">
                       <UserIcon />
                       Cart
                     </DropdownMenuItem>
                   </Link>
-                  <DropdownMenuItem className='text-[17px] cursor-pointer'>
+                  <DropdownMenuItem className="text-[17px] cursor-pointer">
                     <CreditCardIcon />
                     Billing
                   </DropdownMenuItem>
                   <Link to={USER_ROUTES_PATH.setting}>
-                    <DropdownMenuItem className='text-[17px] cursor-pointer'>
+                    <DropdownMenuItem className="text-[17px] cursor-pointer">
                       <SettingsIcon />
                       Settings
                     </DropdownMenuItem>
                   </Link>
                   {data.payload.role === "admin" && (
                     <Link to={USER_ROUTES_PATH.admin}>
-                      <DropdownMenuItem className='text-[17px] cursor-pointer text-violet-700 hover:text-violet-800 hover:bg-violet-50'>
+                      <DropdownMenuItem className="text-[17px] cursor-pointer text-violet-700 hover:text-violet-800 hover:bg-violet-50">
                         <ShieldIcon />
                         Admin Panel
                       </DropdownMenuItem>
@@ -129,7 +169,7 @@ export function Header() {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className='text-[17px] cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50'
+                    className="text-[17px] cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={handleLogout}
                   >
                     <LogOutIcon />
@@ -147,7 +187,7 @@ export function Header() {
             )}
           </div>
         </div>
-      </header >
+      </header>
     </div>
   );
 };

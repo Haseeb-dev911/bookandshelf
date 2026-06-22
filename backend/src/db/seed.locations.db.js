@@ -8,24 +8,24 @@ import { countriesModel } from "./models/countries.schema.js";
 import { citiesModel } from "./models/cites.schema.js";
 
 async function seedCountries() {
-    const res = await fetch(
-      "https://restcountries.com/v3.1/all?fields=name,idd,flags,cca2",
-    );
+    const res = await fetch(
+      "https://raw.githubusercontent.com/mledoze/countries/master/countries.json",
+    );
 
-    const data = await res.json();
+    const data = await res.json();
 
-    for (const country of data) {
-      await db.insert(countriesModel).values({
-        name: country.name?.common.toLowerCase() ?? null,
+    for (const country of data) {
+      await db.insert(countriesModel).values({
+        name: country.name?.common.toLowerCase() ?? null,
 
-        phoneCode: country.idd?.root
-          ? country.idd.root + (country.idd.suffixes?.[0] || "")
-          : null,
+        phoneCode: country.idd?.root
+          ? country.idd.root + (country.idd.suffixes?.[0] || "")
+          : null,
 
-        flagUrl: country.flags?.png ?? null,
-        iso2: country.cca2,
-      });
-    }
+        flagUrl: country.cca2 ? `https://flagcdn.com/w320/${country.cca2.toLowerCase()}.png` : null,
+        iso2: country.cca2,
+      });
+    }
 
     console.log("Countries inserted successfully");
 
