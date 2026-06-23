@@ -8,7 +8,7 @@ import profileSettingRouter from "../modules/profile-setting/routes/profile-sett
 import sellerProfileRouter from "../modules/seller-profile/routes/seller-profile.route.js";
 import productRouter from "../modules/Product-page/routes/product.route.js";
 import adminRouter from "../modules/admin/routes/admin.route.js";
-
+import eBookCartRouter from "../modules/eBookCart/routes/ebook.cart.route.js";
 
 const mainRouter = express.Router();
 
@@ -30,4 +30,7 @@ mainRouter.use("/product", productRouter);
 
 mainRouter.use("/admin", adminRouter);
 
-export default mainRouter;
+mainRouter.use("/cart", eBookCartRouter);
+
+export default mainRouter;
+

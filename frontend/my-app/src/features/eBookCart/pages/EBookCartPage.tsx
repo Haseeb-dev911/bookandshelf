@@ -1,76 +1,47 @@
-import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Header } from "@/shared/components/Header";
 import { Footer } from "@/features/home/components/Footer";
 import { CartItemCard } from "../components/CartItemCard";
 import { CartSummary } from "../components/CartSummary";
 import { EmptyCart } from "../components/EmptyCart";
-import { initialEBookCartItems } from "../data/ebook-cart.mock";
-import type { CartTotals, EBookCartItem } from "../types/ebook-cart.types";
+import { useCart } from "../hooks/useCart";
+import { AUTH_ROUTES_PATH } from "@/app/router/routes.path";
 
 export const EBookCartPage = () => {
-  const [cartItems, setCartItems] = useState<EBookCartItem[]>(
-    initialEBookCartItems
-  );
+  const { cartItems, isLoading, removeItem, totals, isLoggedIn } = useCart();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const totals = useMemo<CartTotals>(() => {
-    const subtotal = cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
-
-    const shipping = 0;
-    const tax = subtotal * 0.08;
-    const grandTotal = subtotal + shipping + tax;
-
-    const totalItems = cartItems.reduce(
-      (total, item) => total + item.quantity,
-      0
-    );
-
-    return {
-      subtotal,
-      shipping,
-      tax,
-      grandTotal,
-      totalItems,
-    };
-  }, [cartItems]);
-
-  const handleIncrement = (id: string) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item
-      )
-    );
-  };
-
-  const handleDecrement = (id: string) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: Math.max(1, item.quantity - 1),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleRemove = (id: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-    toast.success("E-book removed from cart");
+  const handleRemove = async (id: string) => {
+    try {
+      await removeItem(id);
+      toast.success("E-book removed from cart");
+    } catch (err) {
+      toast.error("Failed to remove from cart");
+    }
   };
 
   const handleCheckout = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to proceed to checkout");
+      navigate(`${AUTH_ROUTES_PATH.login}?redirect=${location.pathname}`);
+      return;
+    }
     toast.success("Checkout UI ready. Backend/payment integration pending.");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="grow flex items-center justify-center">
+          <span className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const isCartEmpty = cartItems.length === 0;
 
@@ -80,7 +51,7 @@ export const EBookCartPage = () => {
 
       <main className="grow pt-32">
         {isCartEmpty ? (
-          <EmptyCart />
+          <EmptyCart isLoggedIn={isLoggedIn} />
         ) : (
           <>
             <section className="border-b border-slate-200/70 bg-gradient-to-br from-[#fbf9f4] via-white to-[#f7f3e9] px-4 pb-12 pt-8">
@@ -95,7 +66,8 @@ export const EBookCartPage = () => {
                       E-Book Cart
                     </h1>
                     <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-500 md:text-lg">
-                      Review your selected e-books before checkout. After payment, files will be available for instant download.
+                      Review your selected e-books before checkout. After
+                      payment, files will be available for instant download.
                     </p>
                   </div>
 
@@ -116,9 +88,7 @@ export const EBookCartPage = () => {
                 {cartItems.map((item) => (
                   <CartItemCard
                     key={item.id}
-                    item={item}
-                    onIncrement={handleIncrement}
-                    onDecrement={handleDecrement}
+                    item={item as any}
                     onRemove={handleRemove}
                   />
                 ))}

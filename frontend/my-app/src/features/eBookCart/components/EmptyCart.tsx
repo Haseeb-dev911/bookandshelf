@@ -1,8 +1,10 @@
-import { ArrowRight, BookOpen, ShoppingCart } from "lucide-react";
-import { Link } from "react-router-dom";
-import { USER_ROUTES_PATH } from "@/app/router/routes.path";
+import { ArrowRight, BookOpen, ShoppingCart, LogIn } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { AUTH_ROUTES_PATH, USER_ROUTES_PATH } from "@/app/router/routes.path";
 
-export const EmptyCart = () => {
+export const EmptyCart = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
+  const location = useLocation();
+  
   return (
     <section className="flex min-h-[60vh] items-center justify-center px-4 py-20">
       <div className="mx-auto max-w-xl text-center">
@@ -25,14 +27,26 @@ export const EmptyCart = () => {
           Looks like you have not added any e-books yet. Browse the marketplace and add your next digital read.
         </p>
 
-        <Link
-          to={USER_ROUTES_PATH.browse}
-          className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4a1a14] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#4a1a14]/20 transition hover:-translate-y-0.5 hover:bg-[#3a140f]"
-        >
-          Continue Shopping
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            to={USER_ROUTES_PATH.browse}
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-[#4a1a14] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#4a1a14]/20 transition hover:-translate-y-0.5 hover:bg-[#3a140f]"
+          >
+            Browse Books
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          {!isLoggedIn && (
+            <Link
+              to={`${AUTH_ROUTES_PATH.login}?redirect=${location.pathname}`}
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-black text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50"
+            >
+              Sign In to see saved items
+              <LogIn className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
       </div>
     </section>
   );
-};
+};

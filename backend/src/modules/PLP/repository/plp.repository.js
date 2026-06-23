@@ -2,6 +2,7 @@ import { eq, and, ilike, or, asc, desc, gt, lt } from "drizzle-orm";
 import db from "../../../db/index.config.js";
 
 import { oldBookProductModel, oldBookProductImagesModel } from "../../../db/models/old.book.product.schema.js";
+import { eBookProductModel, eBookProductImagesModel } from "../../../db/models/e.book.product.schema.js";
 import { categoriesModel } from "../../../db/models/category.book.schema.js";
 import { AppError } from "../../../error/App.error.js";
 
@@ -30,71 +31,86 @@ export const plpRepository = {
         offset = 0
     } = {}) => {
         try {
-            const conditions = [eq(oldBookProductModel.status, "active")];
+            let allListings = [];
 
-            if (type === "ebook") {
-                conditions.push(eq(oldBookProductModel.isEbook, true));
-            } else if (type === "physical") {
-                conditions.push(eq(oldBookProductModel.isEbook, false));
+            // 1. Fetch physical books
+            if (type === "all" || type === "physical") {
+                const physicalConditions = [eq(oldBookProductModel.status, "active")];
+                if (categoryId) physicalConditions.push(eq(oldBookProductModel.categoryId, categoryId));
+                if (condition) physicalConditions.push(eq(oldBookProductModel.condition, condition));
+
+                let physicalOrderFn;
+                if (sortBy === "price_asc") physicalOrderFn = (books, { asc }) => [asc(books.price)];
+                else if (sortBy === "price_desc") physicalOrderFn = (books, { desc }) => [desc(books.price)];
+                else physicalOrderFn = (books, { desc }) => [desc(books.createdAt)];
+
+                const physicalListings = await db.query.oldBookProductModel.findMany({
+                    where: (books, { and }) => and(...physicalConditions),
+                    with: {
+                        images: true,
+                        seller: {
+                            with: { setting: true }
+                        },
+                        locationCity: true
+                    },
+                    orderBy: physicalOrderFn,
+                    limit: search ? undefined : offset + limit,
+                });
+                
+                allListings.push(...physicalListings.map(l => ({ ...l, isEbook: false })));
             }
 
-            if (categoryId) {
-                conditions.push(eq(oldBookProductModel.categoryId, categoryId));
-            }
+            // 2. Fetch ebooks (skip if filtering by condition since ebooks don't have conditions)
+            if ((type === "all" || type === "ebook") && !condition) {
+                const ebookConditions = [eq(eBookProductModel.status, "active")];
+                if (categoryId) ebookConditions.push(eq(eBookProductModel.categoryId, categoryId));
 
-            if (condition) {
-                conditions.push(eq(oldBookProductModel.condition, condition));
-            }
+                let ebookOrderFn;
+                if (sortBy === "price_asc") ebookOrderFn = (books, { asc }) => [asc(books.price)];
+                else if (sortBy === "price_desc") ebookOrderFn = (books, { desc }) => [desc(books.price)];
+                else ebookOrderFn = (books, { desc }) => [desc(books.createdAt)];
 
-            // Determine sort direction
-            let orderFn;
-            if (sortBy === "price_asc") {
-                orderFn = (books, { asc }) => [asc(books.price)];
-            } else if (sortBy === "price_desc") {
-                orderFn = (books, { desc }) => [desc(books.price)];
-            } else {
-                // default: newest first
-                orderFn = (books, { desc }) => [desc(books.createdAt)];
-            }
-
-            // NOTE: drizzle's findMany doesn't support ILIKE search natively in a
-            // where-builder with dynamic conditions, so we fetch with other filters
-            // and optionally post-filter in JS for the search term.
-            // For large datasets this should be moved to a raw SQL with ILIKE.
-            const listings = await db.query.oldBookProductModel.findMany({
-                where: (books, { and }) => and(...conditions),
-                with: {
-                    images: true,
-                    seller: {
-                        with: {
-                            setting: true
+                const ebookListings = await db.query.eBookProductModel.findMany({
+                    where: (books, { and }) => and(...ebookConditions),
+                    with: {
+                        images: true,
+                        seller: {
+                            with: { setting: true }
                         }
                     },
-                    locationCity: true
-                },
-                orderBy: orderFn,
-                limit: search ? undefined : limit,   // if searching, fetch broader set
-                offset: search ? 0 : offset,
-            });
+                    orderBy: ebookOrderFn,
+                    limit: search ? undefined : offset + limit,
+                });
+                
+                allListings.push(...ebookListings.map(l => ({ ...l, isEbook: true })));
+            }
 
-            // --- client-side search filter (title / description) ---
-            let filtered = listings;
+            // 3. Client-side search filter (title / description)
             if (search && search.trim()) {
                 const q = search.toLowerCase();
-                filtered = listings.filter(
-                    b =>
-                        b.title?.toLowerCase().includes(q) ||
-                        b.description?.toLowerCase().includes(q)
+                allListings = allListings.filter(b =>
+                    b.title?.toLowerCase().includes(q) ||
+                    b.description?.toLowerCase().includes(q)
                 );
             }
 
-            // Manual pagination slice when search is active
-            const total = filtered.length;
-            const page = search ? filtered.slice(offset, offset + limit) : filtered;
+            // 4. Sort the combined results
+            if (sortBy === "price_asc") {
+                allListings.sort((a, b) => Number(a.price) - Number(b.price));
+            } else if (sortBy === "price_desc") {
+                allListings.sort((a, b) => Number(b.price) - Number(a.price));
+            } else {
+                // newest
+                allListings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            }
+
+            // 5. Slice for pagination
+            const total = search ? allListings.length : undefined;
+            const page = allListings.slice(offset, offset + limit);
 
             return {
                 listings: page,
-                total: search ? total : undefined,   // only available for search
+                total,
                 hasMore: page.length === limit
             };
 
