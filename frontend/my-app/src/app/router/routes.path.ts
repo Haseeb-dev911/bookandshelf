@@ -22,6 +22,7 @@ export const USER_ROUTES_PATH = {
   wishlist: "/wishlist",
   sellerProfile: "/seller/:sellerId",
   product: "/product/:bookId",
+  cart:"/cart",
   admin: "/admin",
 };
 

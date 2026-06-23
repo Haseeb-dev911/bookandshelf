@@ -62,7 +62,6 @@ export function MenuModal() {
                                 { label: 'Home', href: USER_ROUTES_PATH.home },
                                 { label: 'Browse', href: USER_ROUTES_PATH.browse },
                                 { label: 'Sell', href: USER_ROUTES_PATH.sell },
-                                { label: 'E-Books', href: '/ebooks' },
                                 { label: 'Categories', href: '/categories' },
                                 { label: 'Setting', href: USER_ROUTES_PATH.setting },
                                 { label: 'About', href: '/about' },

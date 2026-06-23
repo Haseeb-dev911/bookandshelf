@@ -33,7 +33,8 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-    // console.log(err);
+    console.error("GLOBAL ERROR HANDLER:", err);
+    require('fs').appendFileSync('error.log', JSON.stringify({ message: err.message, stack: err.stack, errors: err.errors }) + '\n');
     
     return res.status(err.statusCode || 500).json({
         success: false,

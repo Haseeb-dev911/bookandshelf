@@ -4,11 +4,13 @@ import { Footer } from "@/features/home/components/Footer";
 import { useProductDetails } from "../queries/product.queries";
 import { USER_ROUTES_PATH, USER_ROUTE_BUILDER } from "@/app/router/routes.path";
 import libraryImg from "@/assets/images/library.png";
-import { MapPin, User, ChevronRight } from "lucide-react";
+import { MapPin, User, ChevronRight, ShoppingCart, Check } from "lucide-react";
+import { useCart } from "@/features/eBookCart/hooks/useCart";
 
 export function ProductPage() {
   const { bookId } = useParams<{ bookId: string }>();
   const { data, isLoading, isError } = useProductDetails(bookId ?? "");
+  const { isInCart, addItem } = useCart();
 
   const book = data?.payload;
 
@@ -167,10 +169,34 @@ export function ProductPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition-colors shadow-sm">
-                  Buy Now
-                </button>
-                <Link to={USER_ROUTE_BUILDER.sellerProfile(book.seller?.id ?? book.sellerId)} className="flex-1 bg-white hover:bg-slate-50 text-slate-900 border border-slate-900 font-medium py-3 rounded-xl transition-colors text-center shadow-sm">
+                {book.isEbook ? (
+                  <button 
+                    onClick={() => {
+                      if (!isInCart(book.id)) {
+                        addItem(book);
+                      }
+                    }}
+                    disabled={isInCart(book.id)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-green-500 disabled:hover:bg-green-500 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors shadow-sm"
+                  >
+                    {isInCart(book.id) ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        In Cart
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        Add to Cart
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition-colors shadow-sm">
+                    Buy Now
+                  </button>
+                )}
+                <Link to={USER_ROUTE_BUILDER.sellerProfile(book.seller?.id ?? book.sellerId)} className="flex-1 bg-white hover:bg-slate-50 text-slate-900 border border-slate-900 font-medium py-3 rounded-xl transition-colors text-center flex items-center justify-center shadow-sm">
                   View Seller Profile
                 </Link>
               </div>

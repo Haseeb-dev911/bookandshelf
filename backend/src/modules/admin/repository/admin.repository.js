@@ -2,6 +2,7 @@ import { eq, and, sql, desc, asc } from "drizzle-orm";
 import db from "../../../db/index.config.js";
 import { userAccountModel } from "../../../db/models/user.account.schema.js";
 import { oldBookProductModel, oldBookProductImagesModel } from "../../../db/models/old.book.product.schema.js";
+import { eBookProductModel, eBookProductImagesModel } from "../../../db/models/e.book.product.schema.js";
 import { categoriesModel } from "../../../db/models/category.book.schema.js";
 import { AppError } from "../../../error/App.error.js";
 
@@ -13,7 +14,7 @@ export const adminRepository = {
                 .select({ count: sql`count(*)::int` })
                 .from(userAccountModel);
 
-            // Count total listings (physical + ebooks)
+            // Count total listings (physical)
             const [listingsCountResult] = await db
                 .select({ count: sql`count(*)::int` })
                 .from(oldBookProductModel);
@@ -21,20 +22,21 @@ export const adminRepository = {
             // Count ebooks
             const [ebooksCountResult] = await db
                 .select({ count: sql`count(*)::int` })
-                .from(oldBookProductModel)
-                .where(eq(oldBookProductModel.isEbook, true));
+                .from(eBookProductModel);
 
             // Count physical listings
-            const [physicalCountResult] = await db
-                .select({ count: sql`count(*)::int` })
-                .from(oldBookProductModel)
-                .where(eq(oldBookProductModel.isEbook, false));
+            const physicalCountResult = listingsCountResult;
 
             // Count active listings
             const [activeCountResult] = await db
                 .select({ count: sql`count(*)::int` })
                 .from(oldBookProductModel)
                 .where(eq(oldBookProductModel.status, "active"));
+            
+            const [activeEbooksCountResult] = await db
+                .select({ count: sql`count(*)::int` })
+                .from(eBookProductModel)
+                .where(eq(eBookProductModel.status, "active"));
 
             // Count sold listings
             const [soldCountResult] = await db
@@ -42,13 +44,18 @@ export const adminRepository = {
                 .from(oldBookProductModel)
                 .where(eq(oldBookProductModel.status, "sold"));
 
+            const [soldEbooksCountResult] = await db
+                .select({ count: sql`count(*)::int` })
+                .from(eBookProductModel)
+                .where(eq(eBookProductModel.status, "sold"));
+
             return {
                 totalUsers: usersCountResult?.count || 0,
-                totalListings: listingsCountResult?.count || 0,
+                totalListings: (listingsCountResult?.count || 0) + (ebooksCountResult?.count || 0),
                 totalEbooks: ebooksCountResult?.count || 0,
                 totalPhysical: physicalCountResult?.count || 0,
-                activeListings: activeCountResult?.count || 0,
-                soldListings: soldCountResult?.count || 0,
+                activeListings: (activeCountResult?.count || 0) + (activeEbooksCountResult?.count || 0),
+                soldListings: (soldCountResult?.count || 0) + (soldEbooksCountResult?.count || 0),
             };
         } catch (error) {
             console.error("Dashboard stats repo error:", error);
@@ -75,17 +82,41 @@ export const adminRepository = {
 
     getListingGrowthTimeline: async () => {
         try {
-            const result = await db
+            // Need to combine physical and ebooks for timeline
+            // Since Drizzle lacks easy UNION ALL, we do it in code
+            const physicalGrowth = await db
                 .select({
                     date: sql`date_trunc('day', ${oldBookProductModel.createdAt})::date`,
-                    total: sql`count(*)::int`,
-                    ebookCount: sql`sum(case when ${oldBookProductModel.isEbook} = true then 1 else 0 end)::int`,
-                    physicalCount: sql`sum(case when ${oldBookProductModel.isEbook} = false then 1 else 0 end)::int`
+                    physicalCount: sql`count(*)::int`
                 })
                 .from(oldBookProductModel)
-                .groupBy(sql`date_trunc('day', ${oldBookProductModel.createdAt})::date`)
-                .orderBy(asc(sql`date_trunc('day', ${oldBookProductModel.createdAt})::date`));
-            return result;
+                .groupBy(sql`date_trunc('day', ${oldBookProductModel.createdAt})::date`);
+                
+            const ebookGrowth = await db
+                .select({
+                    date: sql`date_trunc('day', ${eBookProductModel.createdAt})::date`,
+                    ebookCount: sql`count(*)::int`
+                })
+                .from(eBookProductModel)
+                .groupBy(sql`date_trunc('day', ${eBookProductModel.createdAt})::date`);
+
+            const combinedMap = new Map();
+            physicalGrowth.forEach(item => {
+                const dateStr = typeof item.date === 'string' ? item.date : item.date.toISOString().split('T')[0];
+                combinedMap.set(dateStr, { date: item.date, physicalCount: item.physicalCount, ebookCount: 0, total: item.physicalCount });
+            });
+            ebookGrowth.forEach(item => {
+                const dateStr = typeof item.date === 'string' ? item.date : item.date.toISOString().split('T')[0];
+                if (combinedMap.has(dateStr)) {
+                    const existing = combinedMap.get(dateStr);
+                    existing.ebookCount = item.ebookCount;
+                    existing.total += item.ebookCount;
+                } else {
+                    combinedMap.set(dateStr, { date: item.date, physicalCount: 0, ebookCount: item.ebookCount, total: item.ebookCount });
+                }
+            });
+            
+            return Array.from(combinedMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         } catch (error) {
             console.error("Listing growth repo error:", error);
             throw new AppError("Failed to fetch listing growth data", 500);
@@ -94,8 +125,7 @@ export const adminRepository = {
 
     getEbooks: async ({ limit = 10, offset = 0 } = {}) => {
         try {
-            return await db.query.oldBookProductModel.findMany({
-                where: eq(oldBookProductModel.isEbook, true),
+            return await db.query.eBookProductModel.findMany({
                 with: {
                     images: true,
                     seller: true,
@@ -114,7 +144,7 @@ export const adminRepository = {
         try {
             const { title, author, description, price, categoryId, coverImage, pdfFile, discountPercentage = 0 } = data;
             const newEbook = await db.transaction(async (tx) => {
-                const [book] = await tx.insert(oldBookProductModel)
+                const [book] = await tx.insert(eBookProductModel)
                     .values({
                         sellerId: userId,
                         categoryId,
@@ -122,16 +152,14 @@ export const adminRepository = {
                         author,
                         description,
                         price: price.toString(),
-                        isEbook: true,
                         discountPercentage,
                         pdfUrl: pdfFile.secure_url,
                         pdfPublicId: pdfFile.public_id,
-                        customFields: {},
                     })
                     .returning();
 
                 // Insert cover image into images table so PLP and details page load it automatically
-                await tx.insert(oldBookProductImagesModel)
+                await tx.insert(eBookProductImagesModel)
                     .values({
                         productId: book.id,
                         public_id: coverImage.public_id,
@@ -168,18 +196,18 @@ export const adminRepository = {
                     updateFields.pdfPublicId = pdfFile.public_id;
                 }
 
-                const [book] = await tx.update(oldBookProductModel)
+                const [book] = await tx.update(eBookProductModel)
                     .set(updateFields)
-                    .where(eq(oldBookProductModel.id, bookId))
+                    .where(eq(eBookProductModel.id, bookId))
                     .returning();
 
                 if (coverImage) {
                     // Delete old cover image first
-                    await tx.delete(oldBookProductImagesModel)
-                        .where(eq(oldBookProductImagesModel.productId, bookId));
+                    await tx.delete(eBookProductImagesModel)
+                        .where(eq(eBookProductImagesModel.productId, bookId));
 
                     // Insert new one
-                    await tx.insert(oldBookProductImagesModel)
+                    await tx.insert(eBookProductImagesModel)
                         .values({
                             productId: bookId,
                             public_id: coverImage.public_id,
@@ -201,15 +229,15 @@ export const adminRepository = {
         try {
             // Transaction handles deleting product, cascading deletes its images
             const result = await db.transaction(async (tx) => {
-                const book = await tx.query.oldBookProductModel.findFirst({
-                    where: eq(oldBookProductModel.id, bookId),
+                const book = await tx.query.eBookProductModel.findFirst({
+                    where: eq(eBookProductModel.id, bookId),
                     with: { images: true }
                 });
 
                 if (!book) throw new AppError("E-book not found", 404);
 
-                await tx.delete(oldBookProductModel)
-                    .where(eq(oldBookProductModel.id, bookId));
+                await tx.delete(eBookProductModel)
+                    .where(eq(eBookProductModel.id, bookId));
 
                 return book;
             });
@@ -223,15 +251,15 @@ export const adminRepository = {
 
     applyBulkDiscount: async ({ discountPercentage, categoryId }) => {
         try {
-            const conditions = [eq(oldBookProductModel.isEbook, true)];
+            const conditions = [];
             if (categoryId) {
-                conditions.push(eq(oldBookProductModel.categoryId, categoryId));
+                conditions.push(eq(eBookProductModel.categoryId, categoryId));
             }
 
-            const result = await db.update(oldBookProductModel)
+            const result = await db.update(eBookProductModel)
                 .set({ discountPercentage })
-                .where(and(...conditions))
-                .returning({ id: oldBookProductModel.id });
+                .where(conditions.length > 0 ? and(...conditions) : undefined)
+                .returning({ id: eBookProductModel.id });
 
             return result.length;
         } catch (error) {
