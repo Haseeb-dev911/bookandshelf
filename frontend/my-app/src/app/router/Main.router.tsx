@@ -15,6 +15,7 @@ import { ProductPage } from '@/features/Product-page';
 import { AdminGuard } from '@/features/admin/routes/Admin.guard';
 import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
 import { EBookCartPage } from "./../../features/eBookCart/pages/EBookCartPage";
+import { CheckoutPage, PaymentSuccessPage, PaymentFailedPage } from '@/features/payment';
 
 export const MianRouter = createBrowserRouter([
   {
@@ -67,6 +68,18 @@ export const MianRouter = createBrowserRouter([
         <AdminDashboard />
       </AdminGuard>
     )
+  },
+  {
+    path: USER_ROUTES_PATH.checkout,
+    element: <CheckoutPage />
+  },
+  {
+    path: USER_ROUTES_PATH.paymentSuccess,
+    element: <PaymentSuccessPage />
+  },
+  {
+    path: USER_ROUTES_PATH.paymentFailed,
+    element: <PaymentFailedPage />
   }
 
 ]);

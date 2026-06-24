@@ -9,7 +9,7 @@ import sellerProfileRouter from "../modules/seller-profile/routes/seller-profile
 import productRouter from "../modules/Product-page/routes/product.route.js";
 import adminRouter from "../modules/admin/routes/admin.route.js";
 import eBookCartRouter from "../modules/eBookCart/routes/ebook.cart.route.js";
-
+import paymentRouter from "../modules/payment/routes/payment.route.js";
 const mainRouter = express.Router();
 
 mainRouter.use("/seed", seedLocationsRouter);
@@ -31,6 +31,8 @@ mainRouter.use("/product", productRouter);
 mainRouter.use("/admin", adminRouter);
 
 mainRouter.use("/cart", eBookCartRouter);
+
+mainRouter.use("/payment", paymentRouter);
 
 export default mainRouter;
 

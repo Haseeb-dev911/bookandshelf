@@ -24,6 +24,9 @@ export const USER_ROUTES_PATH = {
   product: "/product/:bookId",
   cart:"/cart",
   admin: "/admin",
+  checkout: "/checkout",
+  paymentSuccess: "/payment/success",
+  paymentFailed: "/payment/failed",
 };
 
 export const USER_ROUTE_BUILDER = {

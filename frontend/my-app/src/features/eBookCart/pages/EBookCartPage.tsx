@@ -6,7 +6,7 @@ import { CartItemCard } from "../components/CartItemCard";
 import { CartSummary } from "../components/CartSummary";
 import { EmptyCart } from "../components/EmptyCart";
 import { useCart } from "../hooks/useCart";
-import { AUTH_ROUTES_PATH } from "@/app/router/routes.path";
+import { AUTH_ROUTES_PATH, USER_ROUTES_PATH } from "@/app/router/routes.path";
 
 export const EBookCartPage = () => {
   const { cartItems, isLoading, removeItem, totals, isLoggedIn } = useCart();
@@ -28,7 +28,7 @@ export const EBookCartPage = () => {
       navigate(`${AUTH_ROUTES_PATH.login}?redirect=${location.pathname}`);
       return;
     }
-    toast.success("Checkout UI ready. Backend/payment integration pending.");
+    navigate(USER_ROUTES_PATH.checkout);
   };
 
   if (isLoading) {
