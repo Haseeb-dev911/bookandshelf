@@ -17,6 +17,8 @@ import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
 import { EBookCartPage } from "./../../features/eBookCart/pages/EBookCartPage";
 import { CheckoutPage, PaymentSuccessPage, PaymentFailedPage } from '@/features/payment';
 
+import { MessagingPage } from '@/features/messaging/pages/MessagingPage';
+
 export const MianRouter = createBrowserRouter([
   {
     element: <AuthSidebarLayout />,
@@ -60,6 +62,14 @@ export const MianRouter = createBrowserRouter([
   {
     path: USER_ROUTES_PATH.cart,
     element: <EBookCartPage />
+  },
+  {
+    path: USER_ROUTES_PATH.messages,
+    element: <MessagingPage />
+  },
+  {
+    path: USER_ROUTES_PATH.messagesConversation,
+    element: <MessagingPage />
   },
   {
     path: USER_ROUTES_PATH.admin,

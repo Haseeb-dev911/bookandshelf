@@ -13,3 +13,6 @@ export * from "./e.book.product.schema.js";
 export * from "./ebook.cart.schema.js";
 
 export * from "./order.schema.js";
+
+export * from "./conversation.schema.js";
+export * from "./message.schema.js";

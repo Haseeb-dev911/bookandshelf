@@ -6,11 +6,37 @@ import { USER_ROUTES_PATH, USER_ROUTE_BUILDER } from "@/app/router/routes.path";
 import libraryImg from "@/assets/images/library.png";
 import { MapPin, User, ChevronRight, ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/features/eBookCart/hooks/useCart";
+import { useProfileDataQuery } from "@/features/profile-setting/services/query.service";
+import { messagingApi } from "@/features/messaging/services/messagingApi";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export function ProductPage() {
   const { bookId } = useParams<{ bookId: string }>();
   const { data, isLoading, isError } = useProductDetails(bookId ?? "");
   const { isInCart, addItem } = useCart();
+  const { data: profileData } = useProfileDataQuery();
+  const navigate = useNavigate();
+
+  const currentUserId = profileData?.payload?.id;
+
+  const handleChatClick = async () => {
+    if (!currentUserId) {
+        toast.error("Please login to chat with seller");
+        navigate("/login");
+        return;
+    }
+    const sellerId = book?.seller?.id || book?.sellerId;
+    if (!sellerId) return;
+
+    try {
+        const conv = await messagingApi.createConversation(sellerId);
+        navigate(`/messages/${conv.id}`);
+    } catch (err) {
+        console.error("Failed to start chat", err);
+        toast.error("Failed to start chat");
+    }
+  };
 
   const book = data?.payload;
 
@@ -192,9 +218,19 @@ export function ProductPage() {
                     )}
                   </button>
                 ) : (
-                  <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition-colors shadow-sm">
-                    Buy Now
-                  </button>
+                  <>
+                    <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition-colors shadow-sm">
+                      Buy Now
+                    </button>
+                    {(book.seller?.id !== currentUserId && book.sellerId !== currentUserId) && (
+                      <button 
+                        onClick={handleChatClick}
+                        className="flex-1 bg-primary text-primary-foreground font-medium py-3 rounded-xl transition-colors shadow-sm"
+                      >
+                        Chat With Seller
+                      </button>
+                    )}
+                  </>
                 )}
                 <Link to={USER_ROUTE_BUILDER.sellerProfile(book.seller?.id ?? book.sellerId)} className="flex-1 bg-white hover:bg-slate-50 text-slate-900 border border-slate-900 font-medium py-3 rounded-xl transition-colors text-center flex items-center justify-center shadow-sm">
                   View Seller Profile

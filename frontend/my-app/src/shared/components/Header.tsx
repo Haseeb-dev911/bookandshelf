@@ -23,6 +23,7 @@ import {
 
 import { MenuModal } from './Menu.modal';
 import { USER_ROUTES_PATH, AUTH_ROUTES_PATH } from '@/app/router/routes.path';
+import { ChatBadge } from '@/features/messaging/components/ChatBadge';
 import { useProfileDataQuery } from '@/features/profile-setting/services/query.service';
 import { settingService } from '@/features/profile-setting/services/setting.page.service';
 import defaultImg from "@/assets/default-img.jpg";
@@ -74,6 +75,7 @@ export function Header() {
 
         <div className="flex items-center gap-5 shrink-0 text-gray-600 relative">
           {isLoggedIn && (
+            <>
             <Link
               to={USER_ROUTES_PATH.wishlist}
               className="hover:text-mahogany transition-colors"
@@ -92,6 +94,8 @@ export function Header() {
                 ></path>
               </svg>
             </Link>
+            <ChatBadge />
+            </>
           )}
 
           <Link

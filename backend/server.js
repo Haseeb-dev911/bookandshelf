@@ -1,4 +1,6 @@
 import app from "./app.js";
+import { createServer } from "http";
+import { initSocket } from "./src/config/socket.js";
 
 import { connectRedis } from "./src/config/redis.config.js";
 import { cronJobstartTokenCleanupJob } from "./src/cronJobs/token.cleanup.cron.js";
@@ -30,7 +32,10 @@ async function startSever() {
     initializeRateLimiters();
 
     const { default: app } = await import("./app.js");
-    app.listen(port, "0.0.0.0", () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+    
+    httpServer.listen(port, "0.0.0.0", () => {
         console.log(`The server is running on ${port} ✔️`);
     });
 }

@@ -23,6 +23,8 @@ export const USER_ROUTES_PATH = {
   sellerProfile: "/seller/:sellerId",
   product: "/product/:bookId",
   cart:"/cart",
+  messages: "/messages",
+  messagesConversation: "/messages/:conversationId",
   admin: "/admin",
   checkout: "/checkout",
   paymentSuccess: "/payment/success",
