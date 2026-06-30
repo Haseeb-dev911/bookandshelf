@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { CheckoutForm } from "../components/CheckoutForm";
@@ -16,9 +16,13 @@ export const CheckoutPage = () => {
     const { mutateAsync: createIntent } = useCreatePaymentIntent();
     const { totals } = useCart();
     const [clientSecret, setClientSecret] = useState<string | null>(null);
+    // Guard against double-firing in React StrictMode or on re-renders
+    const hasInitialised = useRef(false);
 
     useEffect(() => {
-        // Fetch the payment intent on mount
+        if (hasInitialised.current) return;
+        hasInitialised.current = true;
+
         createIntent()
             .then((res) => {
                 setClientSecret(res.payload.clientSecret);
@@ -26,10 +30,11 @@ export const CheckoutPage = () => {
             .catch(() => {
                 toast.error("Failed to initialize checkout. Please try again.");
             });
-    }, [createIntent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#fbf9f4]">
+        <div className="mt-20 flex min-h-screen flex-col bg-[#fbf9f4]">
             <Header />
 
             <main className="grow pt-32 pb-20">

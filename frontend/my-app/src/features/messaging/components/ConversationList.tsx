@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useConversations } from '../hooks/useConversations';
 import { ConversationCard } from './ConversationCard';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 
 export const ConversationList: React.FC = () => {
     const { conversations, isLoading } = useConversations();
@@ -23,24 +24,32 @@ export const ConversationList: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-card border-r border-border">
-            <div className="p-4 border-b border-border">
-                <h2 className="text-xl font-bold mb-4 text-foreground">Messages</h2>
+        <div className="flex flex-col h-full bg-transparent">
+            <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+                {/* Back to homepage */}
+                <Link
+                    to="/"
+                    className="inline-flex items-center gap-1.5 text-[13px] font-medium text-gray-400 hover:text-[#8b5e3c] transition-colors mb-4 group"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                    Back to Home
+                </Link>
+                <h2 className="text-2xl font-serif font-bold mb-5 text-gray-900 tracking-tight">Messages</h2>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search conversations..."
-                        className="w-full bg-muted/50 border border-border rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        className="w-full bg-white border border-gray-200 rounded-full py-2.5 pl-11 pr-4 text-[14px] text-gray-700 focus:outline-none focus:border-[#8b5e3c] focus:ring-1 focus:ring-[#8b5e3c] transition-all shadow-sm placeholder-gray-400"
                     />
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin">
                 {conversations.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 text-center">
-                        <p>No conversations yet.</p>
-                        <p className="text-sm mt-2">Start a chat from an Old Book product page.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 p-4 text-center">
+                        <p className="font-medium text-gray-500">No conversations yet.</p>
+                        <p className="text-sm mt-1">Start a chat from a book page.</p>
                     </div>
                 ) : (
                     conversations.map(conv => (

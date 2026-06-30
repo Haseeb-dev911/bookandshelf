@@ -72,16 +72,21 @@ export const sendMessage = async (req, res, next) => {
             content
         });
 
-        // The socket emission is mostly handled by client calling `socket.emit("sendMessage")` directly,
-        // but we can also emit it from the backend if preferred. 
-        // We will emit here to ensure consistency and instant push.
+        // ── Single authoritative emission path ──────────────────────────────────
+        // The frontend no longer emits via socket.emit("sendMessage"). This HTTP
+        // handler is the ONLY place that emits "newMessage". This guarantees the
+        // receiver always receives the real DB message (with a real UUID), never
+        // a temp-ID optimistic message from the sender's client.
         try {
             const io = getIo();
+            // Deliver real message to both participants
             io.to(`user:${receiverId}`).emit("newMessage", message);
-            // Don't need to emit to sender if they already optimistically updated,
-            // but usually good for multi-device sync
             io.to(`user:${senderId}`).emit("newMessage", message);
+            // Signal both sides to refresh their conversation sidebar
+            io.to(`user:${receiverId}`).emit("conversationUpdated", { conversationId });
+            io.to(`user:${senderId}`).emit("conversationUpdated", { conversationId });
         } catch (socketError) {
+            // Socket failure must never break the HTTP response
             console.error("Socket error during sendMessage:", socketError);
         }
 

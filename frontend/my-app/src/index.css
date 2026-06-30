@@ -132,6 +132,7 @@ body {
   body {
     min-height: 100vh;
     margin: 0;
+    padding-top: 100px;
     font-family: "Roboto", sans-serif !important;
     /* background-color: var(--color-surface); */
     color: var(--color-mahogany);

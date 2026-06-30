@@ -19,12 +19,12 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({ conversation
         <NavLink
             to={`/messages/${conversation.id}`}
             className={({ isActive }) => cn(
-                "flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border border-transparent hover:bg-muted/50",
-                isActive ? "bg-muted border-border" : "bg-card"
+                "flex items-center gap-4 p-4 transition-all duration-300 border-l-[3px] hover:bg-white",
+                isActive ? "bg-white border-[#8b5e3c] shadow-[0_2px_10px_rgb(0,0,0,0.02)]" : "border-transparent"
             )}
         >
-            <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg overflow-hidden border border-border">
+            <div className="relative shrink-0">
+                <div className="w-12 h-12 rounded-full bg-[#f4ece3] flex items-center justify-center text-[#8b5e3c] font-medium text-lg overflow-hidden border border-white shadow-sm">
                     {otherUser.avatar ? (
                         <img src={otherUser.avatar} alt={otherUser.name} className="w-full h-full object-cover" />
                     ) : (
@@ -32,29 +32,31 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({ conversation
                     )}
                 </div>
                 {otherUser.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
                 )}
             </div>
 
             <div className="flex-1 overflow-hidden">
                 <div className="flex justify-between items-center mb-1">
-                    <h4 className="font-semibold text-foreground truncate">{otherUser.name}</h4>
+                    <h4 className="font-semibold text-gray-900 truncate tracking-tight text-[15px]">{otherUser.name}</h4>
                     {conversation.lastMessageAt && (
-                        <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                        <span className="text-[11px] font-medium text-gray-400 whitespace-nowrap ml-2 uppercase tracking-wider">
                             {new Date(conversation.lastMessageAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                         </span>
                     )}
                 </div>
                 <div className="flex justify-between items-center">
                     <p className={cn(
-                        "text-sm truncate pr-2",
-                        isUnread ? "text-foreground font-medium" : "text-muted-foreground"
+                        "text-[13px] truncate pr-2 tracking-wide",
+                        isUnread ? "text-gray-900 font-semibold" : "text-gray-500 font-light"
                     )}>
                         {conversation.lastMessage || "No messages yet"}
                     </p>
-                    {isUnread && (
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    )}
+                    {isUnread ? (
+                        <div className="w-5 h-5 flex items-center justify-center bg-[#8b5e3c] text-white text-[10px] font-bold rounded-full shadow-sm shrink-0">
+                            {conversation.unreadCount}
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </NavLink>

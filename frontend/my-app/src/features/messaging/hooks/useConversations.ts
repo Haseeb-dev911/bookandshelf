@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagingApi } from '../services/messagingApi';
 import { useSocket } from './useSocket';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Conversation } from '../types/messaging.types';
 import { useProfileDataQuery } from '@/features/profile-setting/services/query.service';
 
@@ -28,27 +28,26 @@ export const useConversations = () => {
         }
     });
 
-    // Real-time updates for conversation list
+    // ─── Stable handlers with useCallback ─────────────────────────────────────
+    // IMPORTANT: This hook must NOT register its own 'newMessage' listener.
+    // useMessages already handles that and updates the cache. If we also listen
+    // here, every incoming message triggers TWO invalidations causing a flash of
+    // stale state. Instead, we only listen to 'conversationUpdated', which is the
+    // backend's signal that the conversation list needs refreshing (last message
+    // preview, unread count, etc.).
+    const handleConversationUpdated = useCallback(() => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }, [queryClient]);
+
     useEffect(() => {
         if (!socket || !user) return;
 
-        const handleConversationUpdated = () => {
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        };
-        
-        const handleNewMessage = () => {
-            // Also invalidate conversations if a new message arrives, to update "last message"
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        };
-
         socket.on('conversationUpdated', handleConversationUpdated);
-        socket.on('newMessage', handleNewMessage);
 
         return () => {
             socket.off('conversationUpdated', handleConversationUpdated);
-            socket.off('newMessage', handleNewMessage);
         };
-    }, [socket, user, queryClient]);
+    }, [socket, user, handleConversationUpdated]);
 
     return {
         conversations,

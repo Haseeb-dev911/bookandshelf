@@ -4,12 +4,13 @@ import { Footer } from "@/features/home/components/Footer";
 import { useProductDetails } from "../queries/product.queries";
 import { USER_ROUTES_PATH, USER_ROUTE_BUILDER } from "@/app/router/routes.path";
 import libraryImg from "@/assets/images/library.png";
-import { MapPin, User, ChevronRight, ShoppingCart, Check } from "lucide-react";
+import { MapPin, User, ChevronRight, ShoppingCart, Check, BookOpen } from "lucide-react";
 import { useCart } from "@/features/eBookCart/hooks/useCart";
 import { useProfileDataQuery } from "@/features/profile-setting/services/query.service";
 import { messagingApi } from "@/features/messaging/services/messagingApi";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useIsPurchased } from "@/features/payment/hooks/useIsPurchased";
 
 export function ProductPage() {
   const { bookId } = useParams<{ bookId: string }>();
@@ -17,6 +18,7 @@ export function ProductPage() {
   const { isInCart, addItem } = useCart();
   const { data: profileData } = useProfileDataQuery();
   const navigate = useNavigate();
+  const { isPurchased } = useIsPurchased(bookId);
 
   const currentUserId = profileData?.payload?.id;
 
@@ -196,27 +198,38 @@ export function ProductPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 mt-2">
                 {book.isEbook ? (
-                  <button 
-                    onClick={() => {
-                      if (!isInCart(book.id)) {
-                        addItem(book);
-                      }
-                    }}
-                    disabled={isInCart(book.id)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-green-500 disabled:hover:bg-green-500 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors shadow-sm"
-                  >
-                    {isInCart(book.id) ? (
-                      <>
-                        <Check className="w-5 h-5" />
-                        In Cart
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5" />
-                        Add to Cart
-                      </>
-                    )}
-                  </button>
+                  isPurchased ? (
+                    // Already purchased — disabled state
+                    <button
+                      disabled
+                      className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold py-3 rounded-xl cursor-not-allowed"
+                    >
+                      <BookOpen className="w-5 h-5" />
+                      Already Purchased
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        if (!isInCart(book.id)) {
+                          addItem(book);
+                        }
+                      }}
+                      disabled={isInCart(book.id)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-green-500 disabled:hover:bg-green-500 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors shadow-sm"
+                    >
+                      {isInCart(book.id) ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          In Cart
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-5 h-5" />
+                          Add to Cart
+                        </>
+                      )}
+                    </button>
+                  )
                 ) : (
                   <>
                     <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition-colors shadow-sm">

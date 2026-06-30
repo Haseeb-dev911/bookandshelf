@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -27,12 +27,18 @@ import { ChatBadge } from '@/features/messaging/components/ChatBadge';
 import { useProfileDataQuery } from '@/features/profile-setting/services/query.service';
 import { settingService } from '@/features/profile-setting/services/setting.page.service';
 import defaultImg from "@/assets/default-img.jpg";
+import { useScrollDirection } from '../hooks/useScrollDirection';
+import { GlobalBackButton } from './GlobalBackButton';
 
 
 export function Header() {
   const { data, isSuccess } = useProfileDataQuery();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { scrollDirection, isTop } = useScrollDirection();
+
+  const isHomePage = location.pathname === '/';
 
   const handleLogout = async () => {
     try {
@@ -47,19 +53,35 @@ export function Header() {
   };
 
   const isLoggedIn = isSuccess && data?.success;
+  
+  // Hide header when scrolling down unless we are very close to the top
+  const hideHeader = scrollDirection === 'down' && !isTop;
 
   return (
-    <div className="fixed top-6 left-0 right-0 z-10 flex justify-center px-4 pointer-events-none">
-      <header className="bg-white pointer-events-auto rounded-full shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-surface-dim px-6 py-3 w-full max-w-[1100px] flex items-center justify-between gap-6">
-        <MenuModal />
-        <div className="flex items-center gap-3 w-[170px] h-[50px] cursor-pointer shrink-0">
-          <Link
-            to={"/"}
-            style={{ fontFamily: "'Cinzel', serif", fontSize: "25px" }}
-          >
-            Book&Shelf
-          </Link>
+    <>
+      {/* Black full-screen bg overlay on homepage */}
+      {isHomePage && (
+        <div className="fixed inset-0 bg-black -z-10 pointer-events-none" />
+      )}
+      <div 
+        className={`fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none transition-transform duration-300 ease-in-out ${
+          hideHeader ? '-translate-y-[150%]' : 'translate-y-0'
+        }`}
+      >
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-auto">
+          <GlobalBackButton />
         </div>
+        
+        <header className="bg-white pointer-events-auto rounded-full shadow-[0_2px_15px_rgba(0,0,0,0.04)] border border-surface-dim px-6 py-3 w-full max-w-[1100px] flex items-center justify-between gap-6 relative">
+          <MenuModal />
+          <div className="flex items-center gap-3 w-[170px] h-[50px] cursor-pointer shrink-0">
+            <Link
+              to={"/"}
+              style={{ fontFamily: "'Cinzel', serif", fontSize: "25px" }}
+            >
+              Book&Shelf
+            </Link>
+          </div>
 
         {/* Search Bar */}
         <div className="hidden md:flex md:flex-1 max-w relative">
@@ -192,6 +214,7 @@ export function Header() {
         </div>
       </header>
     </div>
+    </>
   );
 };
 

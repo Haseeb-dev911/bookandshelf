@@ -39,17 +39,29 @@ export const paymentService = {
             { userId } // attach user ID for webhook retrieval
         );
 
-        // Save order as pending in database
-        const order = await paymentRepository.createOrder({
+        // Map cart items into a snapshot for the checkout session
+        const itemsSnapshot = cartItems.map(item => {
+            const price = Number(item.price);
+            const discount = Number(item.discountPercentage) || 0;
+            const finalPrice = discount > 0 ? price - (price * discount / 100) : price;
+            return {
+                ebookId: item.ebookId,
+                priceAtPurchase: finalPrice,
+            };
+        });
+
+        // Save session in database (pre-purchase snapshot)
+        const session = await paymentRepository.createCheckoutSession({
             userId,
             stripePaymentIntentId: paymentIntent.id,
+            itemsSnapshot,
             amount: grandTotal,
             currency: "usd",
         });
 
         return {
             clientSecret: paymentIntent.client_secret,
-            orderId: order.id,
+            sessionId: session.id,
         };
     },
 
@@ -63,6 +75,20 @@ export const paymentService = {
             event = stripeService.constructWebhookEvent(rawBody, signature);
         } catch (err) {
             throw new AppError(`Webhook Error: ${err.message}`, 400);
+        }
+
+        // Log the webhook event
+        try {
+            await paymentRepository.createPaymentLog({
+                stripeEventId: event.id,
+                eventType: event.type,
+                payload: event,
+                status: "processed",
+                error: null,
+            });
+        } catch (logError) {
+            // Ignore unique constraint errors on event ID for idempotency, or just log
+            console.error("Failed to log payment event:", logError.message);
         }
 
         switch (event.type) {
@@ -83,36 +109,53 @@ export const paymentService = {
                     break;
                 }
 
-                // Fetch user's cart items
-                const cartItems = await paymentRepository.getCartItemsWithPrices(userId);
-                
-                if (cartItems.length > 0 && existingOrder) {
-                    // Map to order items format
-                    const orderItemsData = cartItems.map(item => {
-                        const price = Number(item.price);
-                        const discount = Number(item.discountPercentage) || 0;
-                        const finalPrice = discount > 0 ? price - (price * discount / 100) : price;
-                        return {
-                            ebookId: item.ebookId,
-                            priceAtPurchase: finalPrice,
-                        };
-                    });
-
-                    // Insert order items
-                    await paymentRepository.createOrderItems(existingOrder.id, orderItemsData);
-
-                    // Clear the cart
-                    await paymentRepository.clearUserCart(userId);
+                // Fetch the checkout session (snapshot)
+                const session = await paymentRepository.findCheckoutSessionByIntentId(stripePaymentIntentId);
+                if (!session) {
+                    console.error(`[Webhook] No checkout session found for payment intent ${stripePaymentIntentId}.`);
+                    break;
                 }
 
-                // Update order status
+                if (session.status === "completed") {
+                    console.log(`[Webhook] Checkout session ${session.id} already marked completed. Skipping.`);
+                    break;
+                }
+
+                // Create the actual order now that payment has succeeded
+                const order = await paymentRepository.createOrder({
+                    userId,
+                    stripePaymentIntentId,
+                    amount: session.amount,
+                    currency: session.currency,
+                });
+                
+                // Retrieve items snapshot and save to order items
+                const orderItemsData = session.itemsSnapshot;
+                if (orderItemsData && orderItemsData.length > 0) {
+                    await paymentRepository.createOrderItems(order.id, orderItemsData);
+                    // Clear this user's cart — ebook stays available for other users to purchase
+                    await paymentRepository.clearUserCart(userId);
+                    console.log(`[Webhook] Order fulfilled for user ${userId}. ${orderItemsData.length} ebook(s) saved to order history.`);
+                }
+
+                // Update order status and checkout session status
                 await paymentRepository.updateOrderStatus(stripePaymentIntentId, "paid");
+                await paymentRepository.updateCheckoutSessionStatus(stripePaymentIntentId, "completed");
                 break;
             }
 
             case "payment_intent.payment_failed": {
                 const paymentIntent = event.data.object;
-                await paymentRepository.updateOrderStatus(paymentIntent.id, "failed");
+                const stripePaymentIntentId = paymentIntent.id;
+                
+                // Update checkout session status
+                await paymentRepository.updateCheckoutSessionStatus(stripePaymentIntentId, "failed");
+                
+                // If an order somehow exists (shouldn't, but just in case), update it too
+                const existingOrder = await paymentRepository.findOrderByPaymentIntentId(stripePaymentIntentId);
+                if (existingOrder) {
+                    await paymentRepository.updateOrderStatus(stripePaymentIntentId, "failed");
+                }
                 break;
             }
 
@@ -125,14 +168,29 @@ export const paymentService = {
 
     /**
      * Get order status by payment intent ID
+     * (Called by the frontend while polling for success)
      */
     getOrderStatus: async (paymentIntentId) => {
+        // First check if an actual order has been created (which happens after successful webhook)
         const order = await paymentRepository.findOrderByPaymentIntentId(paymentIntentId);
-        if (!order) {
-            throw new AppError("Order not found", 404);
+        if (order) {
+            return { status: order.status }; // Typically 'paid' or 'failed'
         }
-        return {
-            status: order.status,
-        };
-    }
+
+        // If no order is found, the webhook hasn't processed it yet. Look up the pre-payment session.
+        const session = await paymentRepository.findCheckoutSessionByIntentId(paymentIntentId);
+        if (session) {
+            return { status: session.status }; // Typically 'pending' or 'failed'
+        }
+
+        // Neither found - invalid payment intent ID or completely deleted
+        throw new AppError("Payment session not found", 404);
+    },
+
+    /**
+     * Check if a user has already purchased a specific ebook.
+     */
+    checkIfPurchased: async (userId, ebookId) => {
+        return await paymentRepository.isAlreadyPurchased(userId, ebookId);
+    },
 };

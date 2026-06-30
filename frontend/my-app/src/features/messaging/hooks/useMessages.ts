@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagingApi } from '../services/messagingApi';
 import { useSocket } from './useSocket';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Message, SendMessagePayload } from '../types/messaging.types';
 import { useProfileDataQuery } from '@/features/profile-setting/services/query.service';
 
@@ -17,6 +17,29 @@ export const useMessages = (conversationId: string) => {
         enabled: !!conversationId
     });
 
+    // ─── Mark-as-read mutation ──────────────────────────────────────────────────
+    const markReadMutation = useMutation({
+        mutationFn: () => messagingApi.markMessagesAsRead(conversationId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            if (socket) {
+                // Inform the sender that their messages were read
+                const otherMsg = queryClient
+                    .getQueryData<Message[]>(['messages', conversationId])
+                    ?.find((m) => m.senderId !== user?.id);
+                if (otherMsg) {
+                    socket.emit('markRead', {
+                        conversationId,
+                        senderId: otherMsg.senderId,
+                        receiverId: user?.id,
+                    });
+                }
+            }
+        }
+    });
+
+    // ─── Send message mutation ─────────────────────────────────────────────────
     const sendMessageMutation = useMutation({
         mutationFn: (payload: SendMessagePayload) => messagingApi.sendMessage(payload),
         onMutate: async (newMsg) => {
@@ -34,12 +57,15 @@ export const useMessages = (conversationId: string) => {
                 updatedAt: new Date().toISOString()
             };
 
-            queryClient.setQueryData<Message[]>(['messages', conversationId], old => [...(old || []), optimisticMsg]);
+            queryClient.setQueryData<Message[]>(['messages', conversationId], old => [
+                ...(old || []),
+                optimisticMsg
+            ]);
 
-            // Emit socket event optimistically
-            if (socket) {
-                socket.emit("sendMessage", optimisticMsg);
-            }
+            // NOTE: We do NOT emit the socket event here. The backend HTTP handler
+            // already emits to both users after persisting. Emitting from the client
+            // as well would cause the receiver to get a duplicate temp-ID message
+            // followed by the real DB message with a different ID.
 
             return { previousMessages };
         },
@@ -49,62 +75,61 @@ export const useMessages = (conversationId: string) => {
             }
         },
         onSettled: () => {
+            // Invalidate to replace the temp optimistic message with the real DB record
             queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
         }
     });
 
-    const markReadMutation = useMutation({
-        mutationFn: () => messagingApi.markMessagesAsRead(conversationId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-            if (socket && messages.length > 0) {
-                // Find receiverId from the last message where sender was the other person
-                const otherMsg = messages.find(m => m.senderId !== user?.id);
-                if (otherMsg) {
-                    socket.emit("markRead", { conversationId, senderId: otherMsg.senderId, receiverId: user?.id });
-                }
-            }
-        }
-    });
+    // ─── Stable event handlers (useCallback avoids stale closures in listener) ──
+    // CRITICAL FIX: By using useCallback with explicit deps, we produce a stable
+    // function reference that captures the correct conversationId and user.id.
+    // Without useCallback, the handlers inside useEffect form stale closures over
+    // the initial render values of those variables.
+    const handleNewMessage = useCallback((msg: Message) => {
+        if (msg.conversationId !== conversationId) return;
 
-    // Listen to real-time events
+        queryClient.setQueryData<Message[]>(['messages', conversationId], old => {
+            // Deduplicate: ignore if already present (e.g., our own optimistic message
+            // was replaced by the invalidation query above)
+            if (old?.some(m => m.id === msg.id)) return old;
+            return [...(old || []), msg];
+        });
+
+        // Auto mark read if this chat is open and the logged-in user is the receiver
+        if (msg.receiverId === user?.id) {
+            markReadMutation.mutate();
+        }
+    // markReadMutation.mutate is stable — mutate refs don't change across renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationId, queryClient, user?.id]);
+
+    const handleMessageRead = useCallback((data: { conversationId: string; readAt: string }) => {
+        if (data.conversationId !== conversationId) return;
+        queryClient.setQueryData<Message[]>(['messages', conversationId], old => {
+            if (!old) return [];
+            return old.map(m =>
+                !m.isRead && m.senderId === user?.id
+                    ? { ...m, isRead: true, readAt: data.readAt }
+                    : m
+            );
+        });
+    }, [conversationId, queryClient, user?.id]);
+
+    // ─── Socket listener registration ──────────────────────────────────────────
+    // Runs only when socket instance or stable handler refs change.
     useEffect(() => {
         if (!socket || !conversationId) return;
-
-        const handleNewMessage = (msg: Message) => {
-            if (msg.conversationId === conversationId) {
-                queryClient.setQueryData<Message[]>(['messages', conversationId], old => {
-                    const exists = old?.find(m => m.id === msg.id);
-                    if (exists) return old || [];
-                    return [...(old || []), msg];
-                });
-
-                // Auto mark read if chat is open and we are receiver
-                if (msg.receiverId === user?.id) {
-                    markReadMutation.mutate();
-                }
-            }
-        };
-
-        const handleMessageRead = (data: { conversationId: string, readAt: string }) => {
-            if (data.conversationId === conversationId) {
-                queryClient.setQueryData<Message[]>(['messages', conversationId], old => {
-                    if (!old) return [];
-                    return old.map(m => (!m.isRead && m.senderId === user?.id) ? { ...m, isRead: true, readAt: data.readAt } : m);
-                });
-            }
-        };
 
         socket.on('newMessage', handleNewMessage);
         socket.on('messageRead', handleMessageRead);
 
         return () => {
+            // Clean up exactly the handlers we registered — not all handlers.
             socket.off('newMessage', handleNewMessage);
             socket.off('messageRead', handleMessageRead);
         };
-    }, [socket, conversationId, queryClient, user?.id]);
+    }, [socket, conversationId, handleNewMessage, handleMessageRead]);
 
     return {
         messages,

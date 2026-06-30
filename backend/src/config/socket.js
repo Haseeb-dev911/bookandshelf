@@ -15,35 +15,40 @@ export const initSocket = (httpServer) => {
     io.on("connection", (socket) => {
         console.log("New client connected", socket.id);
 
-        // When a user joins (after login or opening app)
+        // ── User registers their identity after connecting ──────────────────────
+        // The frontend emits 'join' with userId only after the user profile is
+        // confirmed loaded. This prevents the stale closure bug where join was
+        // emitted with an undefined userId.
         socket.on("join", async (userId) => {
             if (!userId) return;
-            
+
+            // Join a personal room — this is how we target messages to a specific user
+            // regardless of which socket instance they are connected from.
             socket.join(`user:${userId}`);
-            
-            // Mark user as online in redis
-            // redis is already the client
+
             if (redis) {
+                // Forward map: userId → socketId  (used to check online status)
                 await redis.set(`user_online:${userId}`, socket.id);
+                // Reverse map: socketId → userId  (used to clean up on disconnect)
+                await redis.set(`socket_user:${socket.id}`, userId);
             }
-            
-            // Broadcast user online status
+
             io.emit("userOnline", { userId });
         });
 
-        // Forward message to receiver instantly
-        socket.on("sendMessage", (data) => {
-            // data should include: conversationId, senderId, receiverId, content, etc.
-            if (!data.receiverId) return;
-            
-            io.to(`user:${data.receiverId}`).emit("newMessage", data);
-            io.to(`user:${data.senderId}`).emit("newMessage", data); // also to sender's other tabs
-            
-            io.to(`user:${data.receiverId}`).emit("conversationUpdated", data);
-            io.to(`user:${data.senderId}`).emit("conversationUpdated", data);
-        });
+        // ── sendMessage socket event is REMOVED ────────────────────────────────
+        // Previously this event re-emitted the raw client payload (which contained
+        // a temp ID) to the receiver. However, the HTTP controller (sendMessage in
+        // messaging.controller.js) already:
+        //   1. Persists the message to the DB (gets a real UUID)
+        //   2. Emits "newMessage" with the real DB record to both users
+        //   3. Emits "conversationUpdated" to both users
+        // Having the client ALSO emit via socket created a race condition where the
+        // receiver got the temp-ID message first, then the real message — and the
+        // dedup check (m.id === msg.id) failed because the IDs didn't match.
+        // Solution: the HTTP path is the single source of truth for message emission.
 
-        // Typing indicators
+        // ── Typing indicators ───────────────────────────────────────────────────
         socket.on("typing", (data) => {
             if (!data.receiverId) return;
             io.to(`user:${data.receiverId}`).emit("typing", data);
@@ -54,24 +59,33 @@ export const initSocket = (httpServer) => {
             io.to(`user:${data.receiverId}`).emit("stopTyping", data);
         });
 
-        // Mark read
+        // ── Mark read ───────────────────────────────────────────────────────────
         socket.on("markRead", (data) => {
-            // data: { conversationId, senderId, receiverId }
-            // Receiver is marking messages as read
             if (!data.senderId) return;
-            io.to(`user:${data.senderId}`).emit("messageRead", { 
-                conversationId: data.conversationId, 
-                readAt: new Date().toISOString() 
+            io.to(`user:${data.senderId}`).emit("messageRead", {
+                conversationId: data.conversationId,
+                readAt: new Date().toISOString()
             });
         });
 
+        // ── Cleanup on disconnect ───────────────────────────────────────────────
         socket.on("disconnect", async () => {
             console.log("Client disconnected", socket.id);
-            
-            // We need to find which user this socket belonged to to mark them offline.
-            // A simple approach without mapping all sockets in memory is to iterate Redis or wait for an explicit offline event,
-            // but for now we can just let it expire or if we have a reverse map.
-            // For a robust solution, we might store `socket_user:${socket.id}` -> `userId`
+
+            if (redis) {
+                // Use the reverse map to find which user this socket belonged to
+                const userId = await redis.get(`socket_user:${socket.id}`);
+                if (userId) {
+                    // Only remove the forward map if this socket is still the active one.
+                    // (User may have reconnected with a new socket before this fires.)
+                    const storedSocketId = await redis.get(`user_online:${userId}`);
+                    if (storedSocketId === socket.id) {
+                        await redis.del(`user_online:${userId}`);
+                        io.emit("userOffline", { userId });
+                    }
+                    await redis.del(`socket_user:${socket.id}`);
+                }
+            }
         });
     });
 

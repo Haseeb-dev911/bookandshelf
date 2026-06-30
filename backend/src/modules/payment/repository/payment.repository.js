@@ -3,6 +3,9 @@ import db from "../../../db/index.config.js";
 import { ordersModel, orderItemsModel } from "../../../db/models/order.schema.js";
 import { eBookCartModel } from "../../../db/models/ebook.cart.schema.js";
 import { eBookProductModel } from "../../../db/models/e.book.product.schema.js";
+import { checkoutSessionsModel } from "../../../db/models/checkout.session.schema.js";
+import { paymentLogsModel } from "../../../db/models/payment.logs.schema.js";
+import { inArray } from "drizzle-orm";
 
 // ─── Payment Repository ──────────────────────────────────────────────────────
 
@@ -111,5 +114,111 @@ export const paymentRepository = {
             .limit(1);
 
         return order || null;
+    },
+
+    /**
+     * Create a checkout session before payment.
+     */
+    createCheckoutSession: async ({ userId, stripePaymentIntentId, itemsSnapshot, amount, currency }) => {
+        const [session] = await db
+            .insert(checkoutSessionsModel)
+            .values({
+                userId,
+                stripePaymentIntentId,
+                itemsSnapshot,
+                amount: amount.toString(),
+                currency,
+                status: "pending",
+            })
+            .returning({
+                id: checkoutSessionsModel.id,
+                status: checkoutSessionsModel.status,
+            });
+
+        return session;
+    },
+
+    /**
+     * Find a checkout session by Stripe Payment Intent ID.
+     */
+    findCheckoutSessionByIntentId: async (stripePaymentIntentId) => {
+        const [session] = await db
+            .select()
+            .from(checkoutSessionsModel)
+            .where(eq(checkoutSessionsModel.stripePaymentIntentId, stripePaymentIntentId))
+            .limit(1);
+
+        return session || null;
+    },
+
+    /**
+     * Update checkout session status.
+     */
+    updateCheckoutSessionStatus: async (stripePaymentIntentId, status) => {
+        const [updated] = await db
+            .update(checkoutSessionsModel)
+            .set({ status })
+            .where(eq(checkoutSessionsModel.stripePaymentIntentId, stripePaymentIntentId))
+            .returning({
+                id: checkoutSessionsModel.id,
+                status: checkoutSessionsModel.status,
+            });
+
+        return updated;
+    },
+
+    /**
+     * Log a payment event.
+     */
+    createPaymentLog: async ({ stripeEventId, eventType, payload, status, error }) => {
+        const [log] = await db
+            .insert(paymentLogsModel)
+            .values({
+                stripeEventId,
+                eventType,
+                payload,
+                status,
+                error,
+            })
+            .returning({
+                id: paymentLogsModel.id,
+            });
+
+        return log;
+    },
+
+    /**
+     * Mark a list of ebooks as 'sold' so they can no longer be purchased.
+     * @param {string[]} ebookIds
+     */
+    markEbooksAsSold: async (ebookIds) => {
+        if (!ebookIds || ebookIds.length === 0) return;
+        await db
+            .update(eBookProductModel)
+            .set({ status: "sold" })
+            .where(inArray(eBookProductModel.id, ebookIds));
+    },
+
+    /**
+     * Check if a user has already purchased a specific ebook.
+     * Returns true if a 'paid' order exists containing that ebook.
+     * @param {string} userId
+     * @param {string} ebookId
+     */
+    isAlreadyPurchased: async (userId, ebookId) => {
+        const [row] = await db
+            .select({ id: orderItemsModel.id })
+            .from(orderItemsModel)
+            .innerJoin(ordersModel, eq(orderItemsModel.orderId, ordersModel.id))
+            .where(
+                and(
+                    eq(ordersModel.userId, userId),
+                    eq(ordersModel.status, "paid"),
+                    eq(orderItemsModel.ebookId, ebookId)
+                )
+            )
+            .limit(1);
+
+        return !!row;
     },
 };

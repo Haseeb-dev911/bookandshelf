@@ -56,25 +56,36 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-background">
+        <div className="flex-1 flex flex-col h-full bg-[#fdfdfc]">
             {/* Header */}
-            <div className="p-4 border-b border-border bg-card flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+            <div className="px-6 py-4 border-b border-gray-100 bg-white flex items-center gap-4 shadow-sm relative z-10">
+                {/* Back Button — visible on all screens */}
+                <button 
+                    onClick={() => window.history.back()} 
+                    className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <div className="w-11 h-11 rounded-full bg-[#f4ece3] flex items-center justify-center text-[#8b5e3c] font-medium text-lg border border-white shadow-sm shrink-0">
                     {receiverName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <h3 className="font-semibold">{receiverName}</h3>
+                    <h3 className="font-semibold text-gray-900 tracking-tight text-[15px]">{receiverName}</h3>
+                    <p className="text-[11px] font-medium text-green-500 uppercase tracking-wider">Online</p>
                 </div>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 bg-muted/20 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-6 bg-[#fbf9f6] scrollbar-thin">
                 {messages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
-                        No messages yet. Send a message to start the conversation!
+                    <div className="h-full flex items-center justify-center text-gray-500 font-medium">
+                        Send a message to start the conversation!
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {messages.map(msg => (
                             <MessageBubble key={msg.id} message={msg} />
                         ))}
@@ -84,22 +95,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-card border-t border-border">
-                <form onSubmit={handleSend} className="flex gap-2 relative">
+            <div className="p-5 bg-white border-t border-gray-100">
+                <form onSubmit={handleSend} className="flex gap-3 relative max-w-4xl mx-auto">
                     <input
                         type="text"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         placeholder="Type a message..."
-                        className="flex-1 bg-muted border border-border rounded-full py-3 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="flex-1 bg-[#fbf9f6] border border-gray-200 rounded-full py-3.5 pl-6 pr-14 text-[14px] text-gray-700 focus:outline-none focus:border-[#8b5e3c] focus:ring-1 focus:ring-[#8b5e3c] transition-all shadow-sm placeholder-gray-400"
                         disabled={isSending}
                     />
                     <button
                         type="submit"
                         disabled={!content.trim() || isSending}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center disabled:opacity-50 transition-transform active:scale-95"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 bg-[#8b5e3c] hover:bg-[#724a2f] text-white rounded-full flex items-center justify-center disabled:opacity-50 transition-all active:scale-95 shadow-md"
                     >
-                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}
                     </button>
                 </form>
             </div>

@@ -1,10 +1,19 @@
 import { AppError } from "../../../error/App.error.js";
 import { eBookCartRepository } from "../repository/ebook.cart.repository.js";
+import { paymentRepository } from "../../payment/repository/payment.repository.js";
 
 // ─── E-Book Cart Service ──────────────────────────────────────────────────────
 
 export const addToCartService = async (userId, ebookId) => {
     try {
+        // Block if user has already purchased this ebook
+        const alreadyPurchased = await paymentRepository.isAlreadyPurchased(userId, ebookId);
+        if (alreadyPurchased) {
+            throw new AppError("You have already purchased this e-book.", 400, [
+                { field: "ebookId", message: "This e-book is already in your library." }
+            ]);
+        }
+
         const result = await eBookCartRepository.addToCart(userId, ebookId);
 
         if (result.alreadyExists) {

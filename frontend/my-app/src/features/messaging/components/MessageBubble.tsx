@@ -14,23 +14,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
     return (
         <div className={cn(
-            "flex w-full mt-2 space-x-3 max-w-xs md:max-w-md",
+            "flex w-full mt-3 max-w-[85%] md:max-w-[75%]",
             isMine ? "ml-auto justify-end" : ""
         )}>
             <div className={cn(
-                "p-3 rounded-2xl relative",
-                isMine ? "bg-primary text-primary-foreground rounded-tr-sm" : "bg-muted text-foreground rounded-tl-sm"
+                "p-3.5 px-4 rounded-3xl relative shadow-sm border",
+                isMine 
+                    ? "bg-[#8b5e3c] text-white border-[#724a2f] rounded-tr-sm shadow-[0_2px_10px_rgba(139,94,60,0.15)]" 
+                    : "bg-white text-gray-800 border-gray-100 rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
             )}>
-                <p className="text-sm">{message.content}</p>
+                <p className="text-[14.5px] leading-relaxed font-sans">{message.content}</p>
                 <div className={cn(
-                    "flex items-center gap-1 mt-1 justify-end",
-                    isMine ? "text-primary-foreground/70" : "text-muted-foreground"
+                    "flex items-center gap-1 mt-1.5 justify-end",
+                    isMine ? "text-white/80" : "text-gray-400"
                 )}>
-                    <span className="text-[10px]">
+                    <span className="text-[10px] font-medium tracking-wide">
                         {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {isMine && (
-                        <span className="text-[10px] ml-1">
+                        <span className="text-[10px] ml-1 tracking-tighter">
                             {message.isRead ? '✓✓' : '✓'}
                         </span>
                     )}

@@ -1,6 +1,10 @@
 import express from "express";
 import { paymentAuthMiddleware } from "../middleware/payment.middleware.js";
-import { createPaymentIntentController, getOrderStatusController } from "../controller/payment.controller.js";
+import {
+    createPaymentIntentController,
+    getOrderStatusController,
+    isPurchasedController,
+} from "../controller/payment.controller.js";
 
 const paymentRouter = express.Router();
 
@@ -16,6 +20,13 @@ paymentRouter.get(
     "/order-status/:paymentIntentId",
     paymentAuthMiddleware,
     getOrderStatusController
+);
+
+// GET /payment/is-purchased/:ebookId — check if logged-in user already bought this ebook
+paymentRouter.get(
+    "/is-purchased/:ebookId",
+    paymentAuthMiddleware,
+    isPurchasedController
 );
 
 // Note: webhook route is defined in app.js because it requires raw body parsing

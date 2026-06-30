@@ -1,6 +1,6 @@
 import db from "../../../db/index.config.js";
 import { conversationModel, messageModel, userAccountModel } from "../../../db/models/index.js";
-import { eq, or, and, desc, asc } from "drizzle-orm";
+import { eq, or, and, desc, asc, sql } from "drizzle-orm";
 import { AppError } from "../../../error/App.error.js";
 
 export const createOrGetConversation = async (participantOne, participantTwo) => {
@@ -49,11 +49,32 @@ export const getConversationsByUser = async (userId) => {
         }
     });
 
+    // Fetch unread counts for these conversations where current user is receiver
+    const unreadCounts = await db
+        .select({
+            conversationId: messageModel.conversationId,
+            count: sql`count(*)::int`
+        })
+        .from(messageModel)
+        .where(
+            and(
+                eq(messageModel.receiverId, userId),
+                eq(messageModel.isRead, false)
+            )
+        )
+        .groupBy(messageModel.conversationId);
+
+    const unreadMap = {};
+    unreadCounts.forEach(row => {
+        unreadMap[row.conversationId] = row.count;
+    });
+
     return conversations.map(c => {
         const otherUser = c.participantOne === userId ? c.userTwo : c.userOne;
         return {
             ...c,
-            otherUser
+            otherUser,
+            unreadCount: unreadMap[c.id] || 0
         };
     });
 };
