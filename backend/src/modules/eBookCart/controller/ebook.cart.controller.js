@@ -11,6 +11,10 @@ import {
 export const getUserCartController = async (req, res, next) => {
     try {
         const result = await getUserCartService(req.userId);
+        // Prevent the browser from caching the cart response.
+        // Without this, the browser returns a stale cached response after the cart
+        // is cleared in the DB by the Stripe webhook, making the cart appear non-empty.
+        res.set("Cache-Control", "no-store");
         return res.status(200).json({
             success: result.success,
             message: result.message,

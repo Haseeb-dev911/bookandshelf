@@ -9,6 +9,7 @@ import {
   SettingsIcon,
   UserIcon,
   ShieldIcon,
+  BookOpenIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -172,6 +173,12 @@ export function Header() {
                     <DropdownMenuItem className="text-[17px] cursor-pointer">
                       <UserIcon />
                       Cart
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link to={USER_ROUTES_PATH.library}>
+                    <DropdownMenuItem className="text-[17px] cursor-pointer">
+                      <BookOpenIcon />
+                      E-Library
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem className="text-[17px] cursor-pointer">

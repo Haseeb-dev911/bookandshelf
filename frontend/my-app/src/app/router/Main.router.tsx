@@ -18,6 +18,8 @@ import { EBookCartPage } from "./../../features/eBookCart/pages/EBookCartPage";
 import { CheckoutPage, PaymentSuccessPage, PaymentFailedPage } from '@/features/payment';
 
 import { MessagingPage } from '@/features/messaging/pages/MessagingPage';
+import { LibraryPage } from '@/features/library/pages/LibraryPage';
+import { ReaderPage } from '@/features/library/pages/ReaderPage';
 
 export const MianRouter = createBrowserRouter([
   {
@@ -90,6 +92,13 @@ export const MianRouter = createBrowserRouter([
   {
     path: USER_ROUTES_PATH.paymentFailed,
     element: <PaymentFailedPage />
+  },
+  {
+    path: USER_ROUTES_PATH.library,
+    element: <LibraryPage />
+  },
+  {
+    path: USER_ROUTES_PATH.libraryRead,
+    element: <ReaderPage />
   }
-
 ]);

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrderStatus } from "../queries/payment.queries";
 import toast from "react-hot-toast";
@@ -9,8 +9,9 @@ export const GlobalPaymentWatcher = () => {
     const isSuccessPage = window.location.pathname.includes("/payment/success");
     
     // We keep a local state of the payment intent ID from local storage
-    // but we only want to read it once per mount or if it changes
-    const paymentIntentId = localStorage.getItem("pending_payment_intent");
+    const [paymentIntentId, setPaymentIntentId] = useState<string | null>(() => 
+        localStorage.getItem("pending_payment_intent")
+    );
     const queryClient = useQueryClient();
 
     const { data } = useOrderStatus(isSuccessPage ? null : paymentIntentId);
@@ -22,10 +23,14 @@ export const GlobalPaymentWatcher = () => {
         if (status === "paid") {
             toast.success("Payment completed successfully!");
             localStorage.removeItem("pending_payment_intent");
-            queryClient.invalidateQueries({ queryKey: ["ebook-cart"] });
+            setPaymentIntentId(null);
+            // Reset (not just invalidate) to fully wipe the persisted localStorage cache.
+            queryClient.resetQueries({ queryKey: ["ebook-cart"] });
+            queryClient.invalidateQueries({ queryKey: ["library"] });
         } else if (status === "failed") {
             toast.error("Payment failed. Please try again.");
             localStorage.removeItem("pending_payment_intent");
+            setPaymentIntentId(null);
         }
     }, [data, paymentIntentId, queryClient, isSuccessPage]);
 

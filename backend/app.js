@@ -16,6 +16,7 @@ app.use(cookieParser());
 
 // Stripe webhook must receive raw body BEFORE json parsing
 app.post("/payment/webhook", express.raw({ type: "application/json" }), stripeWebhookController);
+app.post("/api/payment/webhook", express.raw({ type: "application/json" }), stripeWebhookController);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

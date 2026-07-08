@@ -27,8 +27,11 @@ export const PaymentSuccessPage = () => {
     useEffect(() => {
         if (status === "paid") {
             localStorage.removeItem("pending_payment_intent");
-            // Invalidate cart to show it's empty
-            queryClient.invalidateQueries({ queryKey: ["ebook-cart"] });
+            // Reset (not just invalidate) the cart so the persisted localStorage cache
+            // is fully wiped. invalidateQueries only marks it stale, leaving the old
+            // items in localStorage which get re-served before the refetch completes.
+            queryClient.resetQueries({ queryKey: ["ebook-cart"] });
+            queryClient.invalidateQueries({ queryKey: ["library"] });
             
             const timer = setTimeout(() => {
                 navigate(USER_ROUTES_PATH.home);

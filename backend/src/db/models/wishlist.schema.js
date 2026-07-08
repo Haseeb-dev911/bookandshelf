@@ -1,6 +1,7 @@
 import { pgTable, uuid, unique } from "drizzle-orm/pg-core";
 import { userAccountModel } from "./user.account.schema.js";
 import { oldBookProductModel } from "./old.book.product.schema.js";
+import { eBookProductModel } from "./e.book.product.schema.js";
 import { timeStamps } from "./utils/timestamps.common.js";
 import { relations } from "drizzle-orm";
 
@@ -16,13 +17,16 @@ export const wishlistModel = pgTable("wishlist", {
         .references(() => userAccountModel.id, { onDelete: "cascade" }),
 
     bookId: uuid("book_id")
-        .notNull()
         .references(() => oldBookProductModel.id, { onDelete: "cascade" }),
+
+    ebookId: uuid("ebook_id")
+        .references(() => eBookProductModel.id, { onDelete: "cascade" }),
 
     ...timeStamps,
 }, (table) => ({
-    // A user cannot wishlist the same book twice
-    userBookUnique: unique("wishlist_user_book_unique").on(table.userId, table.bookId),
+    // A user cannot wishlist the same physical book twice (handled at application level now for mixed types)
+    // userBookUnique: unique("wishlist_user_book_unique").on(table.userId, table.bookId),
+    // userEbookUnique: unique("wishlist_user_ebook_unique").on(table.userId, table.ebookId),
 }));
 
 // ─── Relations ────────────────────────────────────────────────────────────────
@@ -35,5 +39,9 @@ export const wishlistRelations = relations(wishlistModel, ({ one }) => ({
     book: one(oldBookProductModel, {
         fields: [wishlistModel.bookId],
         references: [oldBookProductModel.id],
+    }),
+    ebook: one(eBookProductModel, {
+        fields: [wishlistModel.ebookId],
+        references: [eBookProductModel.id],
     }),
 }));
