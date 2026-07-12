@@ -1,9 +1,10 @@
-import { eq, and, ilike, or, asc, desc, gt, lt } from "drizzle-orm";
+import { eq, and, ilike, or, asc, desc, gt, lt, inArray } from "drizzle-orm";
 import db from "../../../db/index.config.js";
 
 import { oldBookProductModel, oldBookProductImagesModel } from "../../../db/models/old.book.product.schema.js";
 import { eBookProductModel, eBookProductImagesModel } from "../../../db/models/e.book.product.schema.js";
 import { categoriesModel } from "../../../db/models/category.book.schema.js";
+import { userAccountModel } from "../../../db/models/user.account.schema.js";
 import { AppError } from "../../../error/App.error.js";
 
 
@@ -35,7 +36,10 @@ export const plpRepository = {
 
             // 1. Fetch physical books
             if (type === "all" || type === "physical") {
-                const physicalConditions = [eq(oldBookProductModel.status, "active")];
+                const physicalConditions = [
+                    eq(oldBookProductModel.status, "active"),
+                    inArray(oldBookProductModel.sellerId, db.select({ id: userAccountModel.id }).from(userAccountModel).where(eq(userAccountModel.status, "active")))
+                ];
                 if (categoryId) physicalConditions.push(eq(oldBookProductModel.categoryId, categoryId));
                 if (condition) physicalConditions.push(eq(oldBookProductModel.condition, condition));
 
@@ -62,7 +66,10 @@ export const plpRepository = {
 
             // 2. Fetch ebooks (skip if filtering by condition since ebooks don't have conditions)
             if ((type === "all" || type === "ebook") && !condition) {
-                const ebookConditions = [eq(eBookProductModel.status, "active")];
+                const ebookConditions = [
+                    eq(eBookProductModel.status, "active"),
+                    inArray(eBookProductModel.sellerId, db.select({ id: userAccountModel.id }).from(userAccountModel).where(eq(userAccountModel.status, "active")))
+                ];
                 if (categoryId) ebookConditions.push(eq(eBookProductModel.categoryId, categoryId));
 
                 let ebookOrderFn;

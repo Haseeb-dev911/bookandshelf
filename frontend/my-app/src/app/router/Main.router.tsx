@@ -14,7 +14,13 @@ import { SellerProfilePage } from '@/features/seller-profile';
 import { ProductPage } from '@/features/Product-page';
 import { AdminGuard } from '@/features/admin/routes/Admin.guard';
 import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
+import { UsersManagement } from '@/features/admin/pages/UsersManagement';
 import { EBookCartPage } from "./../../features/eBookCart/pages/EBookCartPage";
+import { CheckoutPage, PaymentSuccessPage, PaymentFailedPage } from '@/features/payment';
+
+import { MessagingPage } from '@/features/messaging/pages/MessagingPage';
+import { LibraryPage } from '@/features/library/pages/LibraryPage';
+import { ReaderPage } from '@/features/library/pages/ReaderPage';
 
 export const MianRouter = createBrowserRouter([
   {
@@ -61,12 +67,47 @@ export const MianRouter = createBrowserRouter([
     element: <EBookCartPage />
   },
   {
+    path: USER_ROUTES_PATH.messages,
+    element: <MessagingPage />
+  },
+  {
+    path: USER_ROUTES_PATH.messagesConversation,
+    element: <MessagingPage />
+  },
+  {
     path: USER_ROUTES_PATH.admin,
     element: (
       <AdminGuard>
         <AdminDashboard />
       </AdminGuard>
     )
+  },
+  {
+    path: USER_ROUTES_PATH.adminUsers,
+    element: (
+      <AdminGuard>
+        <UsersManagement />
+      </AdminGuard>
+    )
+  },
+  {
+    path: USER_ROUTES_PATH.checkout,
+    element: <CheckoutPage />
+  },
+  {
+    path: USER_ROUTES_PATH.paymentSuccess,
+    element: <PaymentSuccessPage />
+  },
+  {
+    path: USER_ROUTES_PATH.paymentFailed,
+    element: <PaymentFailedPage />
+  },
+  {
+    path: USER_ROUTES_PATH.library,
+    element: <LibraryPage />
+  },
+  {
+    path: USER_ROUTES_PATH.libraryRead,
+    element: <ReaderPage />
   }
-
 ]);

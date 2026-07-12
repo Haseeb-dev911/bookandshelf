@@ -5,6 +5,7 @@ import { AppError } from "../../../error/App.error.js";
 import { authRepostory } from "../../auth/repository/auth.repository.js";
 import { oldBookListingRepositoryRedis } from "../repository/book.listing.redis.js";
 import { oldBookListingRepository } from "../repository/book.listing.repository.js";
+import { getIo } from "../../../config/socket.js";
 
 
 export const getBookuploadSignatureService = () => {
@@ -141,15 +142,16 @@ export const deleteUserOldBookProductService = async (bookId, userId) => {
     try {
         const cloudinaryDeleteFn = async (images) => {
             if (!images || images.length === 0) return;
-            const publicIds = images.map(img => img.imageId);
-            const result = await cloudinary.api.delete_resources(publicIds);
-
-            if (result && result.deleted) {
-                const failed = Object.keys(result.deleted).some(key => result.deleted[key] === 'not_found' || result.deleted[key] === 'error');
+            const publicIds = images.map(img => img.public_id).filter(Boolean);
+            if (publicIds.length > 0) {
+                await cloudinary.api.delete_resources(publicIds);
             }
         };
 
         await oldBookListingRepository.deleteListingWithTransaction(bookId, userId, cloudinaryDeleteFn);
+
+        // Notify all connected clients to refresh listings
+        try { getIo().emit("LISTING_DELETED", { bookId }); } catch (_) {}
 
         return { success: true, message: "Listing deleted successfully" };
     } catch (error) {
@@ -166,6 +168,10 @@ export const deleteUserOldBookProductService = async (bookId, userId) => {
 export const markUserOldBookProductSoldService = async (bookId, userId) => {
     try {
         const result = await oldBookListingRepository.markListingAsSold(bookId, userId);
+
+        // Notify all connected clients to refresh listings
+        try { getIo().emit("LISTING_SOLD", { bookId }); } catch (_) {}
+
         return result;
     } catch (error) {
         console.error(error);
@@ -176,4 +182,23 @@ export const markUserOldBookProductSoldService = async (bookId, userId) => {
             [{ field: "root", message: "Failed to mark listing as sold." }],
         );
     }
-}
+};
+
+export const editListingService = async (bookId, userId, formData) => {
+    try {
+        const result = await oldBookListingRepository.editListing(bookId, userId, formData);
+
+        // Notify all connected clients to refresh listings
+        try { getIo().emit("LISTING_UPDATED", { bookId }); } catch (_) {}
+
+        return result;
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) throw error;
+
+        throw new AppError("Failed to update listing.",
+            500,
+            [{ field: "root", message: "Failed to update listing." }],
+        );
+    }
+};

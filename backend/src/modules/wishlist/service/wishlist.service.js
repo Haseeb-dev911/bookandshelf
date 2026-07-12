@@ -53,11 +53,12 @@ export const getUserWishlistService = async (userId) => {
     try {
         const items = await wishlistRepository.getUserWishlist(userId);
 
-        // Shape the response: flatten the nested book object
+        // Shape the response: flatten the nested book/ebook object
         const wishlistItems = items.map((item) => ({
             wishlistId: item.id,
             addedAt: item.createdAt,
-            ...item.book,
+            // For physical books item.book is populated; for ebooks item.ebook is populated.
+            ...(item.book ?? item.ebook),
         }));
 
         return {

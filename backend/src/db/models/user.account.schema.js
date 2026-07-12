@@ -42,6 +42,9 @@ export const userAccountModel = pgTable("users_account", {
     isEmailVerified: boolean("is_email_verfied")
         .default(false),
 
+    status: userStatus("status")
+        .default("active"),
+
     ...timeStamps
 });
 

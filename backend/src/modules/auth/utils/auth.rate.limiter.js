@@ -8,45 +8,45 @@ let tokenRateLimiter = null;
 let passwordResetRequest = null;
 
 const createLimiter = ({ windowMs, limit }) => {
-    return rateLimit({
-        windowMs,
-        limit,
+  return rateLimit({
+    windowMs,
+    limit,
 
-        store: new RedisStore({
-            sendCommand: (...args) => redis.sendCommand([...args]),
-        }),
+    store: new RedisStore({
+      sendCommand: (...args) => redis.sendCommand([...args]),
+    }),
 
-        handler: (req, res) => {
-            return res.status(429).json({
-                success: false,
-                message: "Too many attempts. Try again later",
-                payload: null,
-                errors: [
-                    {
-                        field: "root",
-                        message: "Too many attempts. Try again later",
-                    },
-                ],
-            });
-        },
-    });
+    handler: (req, res) => {
+      return res.status(429).json({
+        success: false,
+        message: "Too many attempts. Try again later",
+        payload: null,
+        errors: [
+          {
+            field: "root",
+            message: "Too many attempts. Try again later",
+          },
+        ],
+      });
+    },
+  });
 };
 
 export const initializeRateLimiters = () => {
-    loginSignupRateLimiter = createLimiter({
-        windowMs: 20 * 60 * 1000,
-        limit: 7,
-    });
+  loginSignupRateLimiter = createLimiter({
+    windowMs: 20 * 60 * 1000,
+    limit: 10,
+  });
 
-    tokenRateLimiter = createLimiter({
-        windowMs: 20 * 60 * 1000,
-        limit: 10,
-    });
+  tokenRateLimiter = createLimiter({
+    windowMs: 20 * 60 * 1000,
+    limit: 10,
+  });
 
-    passwordResetRequest = createLimiter({
-        windowMs: 20 * 60 * 1000,
-        limit: 15,
-    });
+  passwordResetRequest = createLimiter({
+    windowMs: 20 * 60 * 1000,
+    limit: 15,
+  });
 };
 
 export const getLoginSignupRateLimiter = () => loginSignupRateLimiter;
@@ -56,19 +56,18 @@ export const getTokenRateLimiter = () => tokenRateLimiter;
 export const getPasswordResetRequest = () => passwordResetRequest;
 
 export const useLimiter = (getLimiter) => {
-    return (req, res, next) => {
+  return (req, res, next) => {
+    const limiter = getLimiter();
 
-        const limiter = getLimiter();
+    if (!limiter) {
+      return res.status(500).json({
+        success: false,
+        message: "Rate limiter is not initialized",
+        payload: null,
+        errors: [{ field: "root", message: "Rate limiter is not initialized" }],
+      });
+    }
 
-        if (!limiter) {
-            return res.status(500).json({
-                success: false,
-                message: "Rate limiter is not initialized",
-                payload: null,
-                errors: [{ field: "root", message: "Rate limiter is not initialized" }]
-            });
-        }
-
-        return limiter(req, res, next); 
-    };
+    return limiter(req, res, next);
+  };
 };

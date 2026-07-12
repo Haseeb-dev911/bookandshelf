@@ -8,9 +8,11 @@ export const profileSettingRepository = {
     getUserProfile: async (userId) => {
         const [profile] = await db
             .select({
+                id: userAccountModel.id,
                 name: userAccountModel.name,
                 email: userAccountModel.email,
                 role: userAccountModel.role,
+                status: userAccountModel.status,
                 description: userSettingModel.description,
                 cityId: userSettingModel.cityId,
                 countryId: citiesModel.countryId,

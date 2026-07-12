@@ -1,16 +1,22 @@
 import "dotenv/config";
 import express from "express";
+import fs from "fs";
 import cors from "cors";
 import morgan from "morgan";
 
 import mainRouter from "./src/app/main.routes.js";
 import { AppError } from "./src/error/App.error.js";
 import cookieParser from "cookie-parser";
+import { stripeWebhookController } from "./src/modules/payment/controller/payment.controller.js";
 
 const app = express();
 
 app.use(morgan("dev"));
 app.use(cookieParser());
+
+// Stripe webhook must receive raw body BEFORE json parsing
+app.post("/payment/webhook", express.raw({ type: "application/json" }), stripeWebhookController);
+app.post("/api/payment/webhook", express.raw({ type: "application/json" }), stripeWebhookController);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,7 +40,11 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     console.error("GLOBAL ERROR HANDLER:", err);
-    require('fs').appendFileSync('error.log', JSON.stringify({ message: err.message, stack: err.stack, errors: err.errors }) + '\n');
+    try {
+        fs.appendFileSync('error.log', JSON.stringify({ message: err.message, stack: err.stack, errors: err.errors }) + '\n');
+    } catch (fsErr) {
+        console.error("Failed to write to error.log:", fsErr);
+    }
     
     return res.status(err.statusCode || 500).json({
         success: false,

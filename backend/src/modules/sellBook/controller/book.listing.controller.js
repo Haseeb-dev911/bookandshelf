@@ -5,7 +5,8 @@ import {
     validateAssetsRedisService,
     getUserOldBookListingService,
     deleteUserOldBookProductService,
-    markUserOldBookProductSoldService
+    markUserOldBookProductSoldService,
+    editListingService
 } from "../service/book.listing.service.js"; 
 
 
@@ -99,6 +100,22 @@ export const markUserOldBookProductSoldController = async (req, res, next) => {
     try {
         const bookId = req.params.bookId;
         const result = await markUserOldBookProductSoldService(bookId, req.userId);
+
+        return res.status(200).json({
+            success: result.success,
+            message: result.message,
+            errors: null,
+            payload: null
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const editUserOldBookProductController = async (req, res, next) => {
+    try {
+        const bookId = req.params.bookId;
+        const result = await editListingService(bookId, req.userId, req.sanitizedBody);
 
         return res.status(200).json({
             success: result.success,

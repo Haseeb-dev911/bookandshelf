@@ -12,8 +12,12 @@ import { Menu, X } from "lucide-react";
 
 import styles from "./Menu.modal.module.scss";
 import { USER_ROUTES_PATH } from '@/app/router/routes.path';
+import { useProfileDataQuery } from '@/features/profile-setting/services/query.service';
 
 export function MenuModal() {
+    const { data, isSuccess } = useProfileDataQuery();
+    const isLoggedIn = isSuccess && !!data?.success;
+
     return (
         <div >
             <Sheet>
@@ -62,6 +66,7 @@ export function MenuModal() {
                                 { label: 'Home', href: USER_ROUTES_PATH.home },
                                 { label: 'Browse', href: USER_ROUTES_PATH.browse },
                                 { label: 'Sell', href: USER_ROUTES_PATH.sell },
+                                ...(isLoggedIn ? [{ label: 'E-Library', href: USER_ROUTES_PATH.library }] : []),
                                 { label: 'Categories', href: '/categories' },
                                 { label: 'Setting', href: USER_ROUTES_PATH.setting },
                                 { label: 'About', href: '/about' },
