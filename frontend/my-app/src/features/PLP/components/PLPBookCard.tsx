@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
 import { Heart, MapPin, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { BookListing } from "../types/plp.types";
 import libraryImg from "../../../assets/images/library.png";
-import { wishlistService } from "../../wishlist/service/wishlist.service";
 import { showError, showSuccess } from "@/shared/utils/toast.global";
 import { USER_ROUTE_BUILDER } from "@/app/router/routes.path";
+import { useAddToWishlist, useRemoveFromWishlist, useWishlist } from "@/features/wishlist/queries/wishlist.queries";
 
 // ─── Condition colour map ─────────────────────────────────────────────────────
 
@@ -23,23 +22,42 @@ interface BookCardProps {
 }
 
 export const PLPBookCard = ({ book }: BookCardProps) => {
-  const [wishlisted, setWishlisted] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const response = await wishlistService.getWishlistStatus([book.id]);
-        const isWishlisted = response.payload?.statusMap?.[book.id] ?? false;
-        setWishlisted(isWishlisted);
-      } catch (err: any) {
-        if (err.response?.status !== 401) {
-          console.error("Failed to fetch wishlist status", err);
-        }
-      }
-    };
-    fetchStatus();
-  }, [book.id]);
+  // ── Derive wishlisted from the shared cache — no per-card fetch needed ──────
+  const { data: wishlistData } = useWishlist();
+  const wishlistItems = wishlistData?.payload?.items ?? [];
+  const wishlisted = wishlistItems.some(
+    (item) => item.id === book.id || (item as any).ebookId === book.id
+  );
+
+  const { mutate: addToWishlist, isPending: isAdding } = useAddToWishlist();
+  const { mutate: removeFromWishlist, isPending: isRemoving } = useRemoveFromWishlist();
+  const isPending = isAdding || isRemoving;
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPending) return;
+    if (!wishlisted) {
+      addToWishlist(book.id, {
+        onSuccess: (res) => showSuccess((res as any).message || "Added to wishlist."),
+        onError: (err: any) => showError(
+          err?.response?.data?.errors?.[0]?.message ||
+          err?.response?.data?.message ||
+          "Failed to add to wishlist."
+        ),
+      });
+    } else {
+      removeFromWishlist(book.id, {
+        onSuccess: (res) => showSuccess((res as any).message || "Removed from wishlist."),
+        onError: (err: any) => showError(
+          err?.response?.data?.errors?.[0]?.message ||
+          err?.response?.data?.message ||
+          "Failed to remove from wishlist."
+        ),
+      });
+    }
+  };
 
   const isEbook = book.isEbook;
   const imageUrl  = book.images?.[0]?.secure_url ?? libraryImg;
@@ -66,32 +84,21 @@ export const PLPBookCard = ({ book }: BookCardProps) => {
       <button
         id={`wishlist-btn-${book.id}`}
         aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        onClick={async (e) => {
-          e.stopPropagation();
-          setWishlisted((prev) => !prev);
-          try {
-            if (!wishlisted) {
-              const res = await wishlistService.addToWishlist(book.id);
-              showSuccess(res.message || "Added to wishlist.");
-            } else {
-              const res = await wishlistService.removeFromWishlist(book.id);
-              showSuccess(res.message || "Removed from wishlist.");
-            }
-          } catch (err: any) {
-            setWishlisted((prev) => !prev);
-            const errMsg = err.response?.data?.errors?.[0]?.message || err.response?.data?.message || "Something went wrong. Please try again.";
-            showError(errMsg);
-          }
-        }}
-        className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/60 shadow-sm transition-all duration-200 hover:scale-110 active:scale-95"
+        onClick={handleWishlistToggle}
+        disabled={isPending}
+        className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/60 shadow-sm transition-all duration-200 hover:scale-110 active:scale-95 ${isPending ? "opacity-60 cursor-wait" : ""}`}
       >
-        <Heart
-          className={`w-4 h-4 transition-all duration-300 ${
-            wishlisted
-              ? "fill-rose-500 text-rose-500 scale-110"
-              : "text-slate-400 hover:text-rose-400"
-          }`}
-        />
+        {isPending ? (
+          <span className="w-3.5 h-3.5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin inline-block" />
+        ) : (
+          <Heart
+            className={`w-4 h-4 transition-all duration-300 ${
+              wishlisted
+                ? "fill-rose-500 text-rose-500 scale-110"
+                : "text-slate-400 hover:text-rose-400"
+            }`}
+          />
+        )}
       </button>
 
       {/* ── Book Image ── */}

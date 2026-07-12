@@ -11,6 +11,12 @@ export const wishlistRepository = {
 
     /** Add a book to the user's wishlist. Ignores duplicate (idempotent). */
     addToWishlist: async (userId, bookId) => {
+        // Prevent duplicate wishlists manually since we removed the unique constraint
+        const existing = await wishlistRepository.isWishlisted(userId, bookId);
+        if (existing) {
+            return { alreadyExists: true, id: null };
+        }
+
         // Check if it's an old book
         const [oldBook] = await db
             .select({ id: oldBookProductModel.id })
@@ -43,12 +49,6 @@ export const wishlistRepository = {
 
         const isEbook = !!eBook;
         
-        // Prevent duplicate wishlists manually since we removed the unique constraint
-        const existing = await wishlistRepository.isWishlisted(userId, bookId);
-        if (existing) {
-            return { alreadyExists: true, id: null };
-        }
-
         // Insert
         const [inserted] = await db
             .insert(wishlistModel)
@@ -93,6 +93,7 @@ export const wishlistRepository = {
                                 setting: true
                             }
                         },
+                        // We safely load locationCity if it exists, Drizzle handles it gracefully via LEFT JOIN
                         locationCity: true
                     }
                 },
@@ -109,7 +110,9 @@ export const wishlistRepository = {
             },
             orderBy: (w, { desc }) => [desc(w.createdAt)],
         });
-        return items;
+        
+        // Filter out any items where BOTH book and ebook are somehow missing/deleted
+        return items.filter(item => item.book || item.ebook);
     },
 
     /** Return a Set of book IDs that the user has wishlisted — fast status check. */

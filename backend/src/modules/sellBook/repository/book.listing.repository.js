@@ -172,6 +172,55 @@ export const oldBookListingRepository = {
                 .where(eq(wishlistModel.bookId, bookId));
         });
         return { success: true, message: "Listing marked as sold successfully" };
+    },
+
+    editListing: async (bookId, userId, formData) => {
+        const { title, author, description, price, condition, categoryId, city, country, customFields, images } = formData;
+
+        await db.transaction(async (tx) => {
+            // Check ownership
+            const book = await tx.query.oldBookProductModel.findFirst({
+                where: (books, { and, eq }) => and(eq(books.id, bookId), eq(books.sellerId, userId)),
+                with: { images: true }
+            });
+
+            if (!book) throw new AppError("Listing not found or unauthorized", 404, [{ field: "root", message: "Listing not found or unauthorized" }]);
+
+            // Build update fields (only update provided fields)
+            const updateFields = {};
+            if (title !== undefined) updateFields.title = title;
+            if (author !== undefined) updateFields.author = author;
+            if (description !== undefined) updateFields.description = description;
+            if (price !== undefined) updateFields.price = String(price);
+            if (condition !== undefined) updateFields.condition = condition;
+            if (categoryId !== undefined) updateFields.categoryId = categoryId;
+            if (city !== undefined) updateFields.city = parseInt(city, 10);
+            if (country !== undefined) updateFields.country = parseInt(country, 10);
+            if (customFields !== undefined) updateFields.customFields = customFields;
+
+            if (Object.keys(updateFields).length > 0) {
+                await tx.update(oldBookProductModel)
+                    .set(updateFields)
+                    .where(eq(oldBookProductModel.id, bookId));
+            }
+
+            // If new images provided, replace old ones
+            if (images && images.length > 0) {
+                await tx.delete(oldBookProductImagesModel)
+                    .where(eq(oldBookProductImagesModel.productId, bookId));
+
+                const imagesToInsert = images.map(img => ({
+                    public_id: img.public_id,
+                    secure_url: img.secure_url,
+                    format: img.format,
+                    resource_type: img.resource_type,
+                    productId: bookId,
+                }));
+                await tx.insert(oldBookProductImagesModel).values(imagesToInsert);
+            }
+        });
+
+        return { success: true, message: "Listing updated successfully" };
     }
 
-}
+}

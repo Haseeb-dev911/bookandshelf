@@ -3,6 +3,8 @@ import { api } from "@/services/apiClient";
 const endpoints = {
     getUserListings: "/old-book/listing",
     deleteUserListing: (bookId: string) => `/old-book/listing/${bookId}`,
+    editUserListing: (bookId: string) => `/old-book/listing/${bookId}`,
+    markAsSold: (bookId: string) => `/old-book/listing/${bookId}/sold`,
     getAllActiveListings: "/plp/listings",
     getAllCategories: "/plp/categories",
 };
@@ -22,7 +24,12 @@ export const listingService = {
     },
 
     markListingAsSold: async (bookId: string) => {
-        const response = await api.patch(`/old-book/listing/${bookId}/sold`);
+        const response = await api.patch(endpoints.markAsSold(bookId));
+        return response.data;
+    },
+
+    editListing: async (bookId: string, data: Record<string, any>) => {
+        const response = await api.patch(endpoints.editUserListing(bookId), data);
         return response.data;
     },
 
@@ -39,4 +46,5 @@ export const listingService = {
         return response.data;
     }
 };
+
 

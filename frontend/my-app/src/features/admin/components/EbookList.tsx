@@ -21,14 +21,34 @@ export function EbookList() {
   );
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this e-book?")) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast.success("E-book deleted successfully");
-      } catch (e) {
-        toast.error("Failed to delete e-book");
-      }
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-semibold text-slate-800">Delete this e-book?</p>
+        <p className="text-xs text-slate-500">This action cannot be undone.</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              try {
+                await deleteMutation.mutateAsync(id);
+                toast.success("E-book deleted successfully");
+              } catch {
+                toast.error("Failed to delete e-book");
+              }
+            }}
+            className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
   };
 
   const handleEdit = (book: any) => {

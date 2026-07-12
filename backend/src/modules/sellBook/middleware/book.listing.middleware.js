@@ -4,6 +4,7 @@ import { bookListingAddValidationSchema, validateAssetsRedisSchema } from "../va
 
 import { AppError } from "../../../error/App.error.js";
 import { redisUserAccount } from "../../auth/repository/auth.redis.repository.js";
+import { authRepostory } from "../../auth/repository/auth.repository.js";
 import { errorsCollectZod } from "../../auth/utils/error.collect.zod.js";
 
 
@@ -34,6 +35,18 @@ export const validateuserMiddleware = async (req, res, next) => {
                 }]
             ));
         }
+
+        const userAccountData = await authRepostory.findUserAccountViaId(req.userId);
+        if (!userAccountData || userAccountData.status === "banned") {
+            return next(new AppError("Your account has been blocked by the administrator.",
+                403, [{
+                    field: "status",
+                    message: "Your account has been blocked by the administrator."
+                }]
+            ));
+        }
+
+        req.userAccountData = userAccountData;
         
         next();
     } catch (error) {
@@ -46,6 +59,18 @@ export const validateuserMiddleware = async (req, res, next) => {
             }]
         ));
     }
+}
+
+export const validateNotRestrictedMiddleware = async (req, res, next) => {
+    if (req.userAccountData && req.userAccountData.status === "restricted") {
+        return next(new AppError("Your account is restricted from performing this action.",
+            403, [{
+                field: "status",
+                message: "Your account is restricted from performing this action."
+            }]
+        ));
+    }
+    next();
 }
 
 export const validateAssetsRedisMiddleware = async (req, res, next) => {
@@ -73,3 +98,15 @@ export const oldBookProductAddMiddleware = async (req, res, next) => {
     next();
 }
 
+export const oldBookProductEditMiddleware = async (req, res, next) => {
+    const { bookListingEditValidationSchema } = await import("../validation/book.listing.validation.js");
+    const validationResult = bookListingEditValidationSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+        const collectingErrors = errorsCollectZod(validationResult);
+        return next(new AppError("Wrong Input fields", 400, collectingErrors));
+    }
+
+    req.sanitizedBody = validationResult.data;
+    next();
+}

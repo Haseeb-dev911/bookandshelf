@@ -26,6 +26,7 @@ export const USER_ROUTES_PATH = {
   messages: "/messages",
   messagesConversation: "/messages/:conversationId",
   admin: "/admin",
+  adminUsers: "/admin/users",
   checkout: "/checkout",
   paymentSuccess: "/payment/success",
   paymentFailed: "/payment/failed",

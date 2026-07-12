@@ -80,3 +80,18 @@ export const bookListingAddValidationSchema = z.object({
             (image) => image.every((img) => img.isUploading !== true),
             { message: "Please wait for all images to finsh uploading!" })
 });
+
+// Partial schema for editing — all fields optional, images optional
+export const bookListingEditValidationSchema = z.object({
+    title: z.string().trim().min(3).max(254).optional(),
+    author: z.string().trim().min(2).max(254).optional(),
+    description: z.string().trim().min(10).max(2000).optional(),
+    price: z.number().positive().max(1000000).optional(),
+    condition: z.enum(product_condition_states).optional(),
+    categoryId: z.string().uuid().optional(),
+    city: z.string().regex(/^\d+$/).optional(),
+    country: z.string().regex(/^\d+$/).optional(),
+    customFields: z.record(z.any()).optional(),
+    // Images can be replaced; pass full new array if replacing
+    images: z.array(imageValidationSchema).min(1).max(12).optional(),
+});

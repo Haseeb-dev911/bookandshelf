@@ -1,5 +1,7 @@
 import { Header } from "@/shared/components/Header";
 import { Footer } from "@/features/home/components/Footer";
+import { useNavigate } from "react-router-dom";
+import { USER_ROUTES_PATH } from "@/app/router/routes.path";
 import { useAdminStats } from "../queries/admin.queries";
 import { 
   Users, 
@@ -41,6 +43,7 @@ function StatCard({ title, value, icon: Icon, colorClass }: { title: string, val
 }
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useAdminStats();
 
   if (isLoading) {
@@ -87,12 +90,20 @@ export function AdminDashboard() {
             </p>
           </div>
           
-          <button 
-            onClick={() => document.getElementById('manage-ebooks')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-all shadow-sm active:scale-95">
-            <FileText className="w-4 h-4" />
-            Manage E-Books
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => navigate(USER_ROUTES_PATH.adminUsers)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all shadow-sm active:scale-95">
+              <Users className="w-4 h-4" />
+              Manage Users
+            </button>
+            <button 
+              onClick={() => document.getElementById('manage-ebooks')?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-all shadow-sm active:scale-95">
+              <FileText className="w-4 h-4" />
+              Manage E-Books
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}

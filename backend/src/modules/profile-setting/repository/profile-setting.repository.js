@@ -12,6 +12,7 @@ export const profileSettingRepository = {
                 name: userAccountModel.name,
                 email: userAccountModel.email,
                 role: userAccountModel.role,
+                status: userAccountModel.status,
                 description: userSettingModel.description,
                 cityId: userSettingModel.cityId,
                 countryId: citiesModel.countryId,
