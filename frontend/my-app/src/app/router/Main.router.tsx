@@ -14,6 +14,7 @@ import { SellerProfilePage } from '@/features/seller-profile';
 import { ProductPage } from '@/features/Product-page';
 import { AdminGuard } from '@/features/admin/routes/Admin.guard';
 import { AdminDashboard } from '@/features/admin/pages/AdminDashboard';
+import { FinanceDashboard } from '@/features/admin/pages/FinanceDashboard';
 import { UsersManagement } from '@/features/admin/pages/UsersManagement';
 import { EBookCartPage } from "./../../features/eBookCart/pages/EBookCartPage";
 import { CheckoutPage, PaymentSuccessPage, PaymentFailedPage } from '@/features/payment';
@@ -87,6 +88,14 @@ export const MianRouter = createBrowserRouter([
     element: (
       <AdminGuard>
         <UsersManagement />
+      </AdminGuard>
+    )
+  },
+  {
+    path: USER_ROUTES_PATH.adminFinance,
+    element: (
+      <AdminGuard>
+        <FinanceDashboard />
       </AdminGuard>
     )
   },

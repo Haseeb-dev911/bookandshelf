@@ -9,7 +9,8 @@ import {
   BookMarked, 
   CheckCircle, 
   FileText,
-  Activity
+  Activity,
+  Wallet
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -102,6 +103,12 @@ export function AdminDashboard() {
               className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-all shadow-sm active:scale-95">
               <FileText className="w-4 h-4" />
               Manage E-Books
+            </button>
+            <button 
+              onClick={() => navigate(USER_ROUTES_PATH.adminFinance)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-all shadow-sm active:scale-95">
+              <Wallet className="w-4 h-4" />
+              Finance
             </button>
           </div>
         </div>
