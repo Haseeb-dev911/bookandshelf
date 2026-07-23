@@ -18,3 +18,6 @@ export * from "./payment.logs.schema.js";
 
 export * from "./conversation.schema.js";
 export * from "./message.schema.js";
+
+export * from "./payout.schema.js";
+export * from "./financial.event.schema.js";

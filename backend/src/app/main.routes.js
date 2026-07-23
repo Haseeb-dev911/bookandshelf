@@ -12,6 +12,7 @@ import eBookCartRouter from "../modules/eBookCart/routes/ebook.cart.route.js";
 import paymentRouter from "../modules/payment/routes/payment.route.js";
 import messagingRouter from "../modules/messaging/routes/messaging.routes.js";
 import libraryRouter from "../modules/library/routes/library.route.js";
+import financeRouter from "../modules/finance/routes/finance.routes.js";
 const mainRouter = express.Router();
 
 mainRouter.use("/seed", seedLocationsRouter);
@@ -39,5 +40,7 @@ mainRouter.use("/payment", paymentRouter);
 mainRouter.use("/messages", messagingRouter);
 
 mainRouter.use("/library", libraryRouter);
+
+mainRouter.use("/admin/finance", financeRouter);
 
 export default mainRouter;
