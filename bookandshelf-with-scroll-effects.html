@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookAndShelf — Marketplace &amp; Digital Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root{
+    --bg:#F6EFE1; --bg-soft:#EEE2CB; --surface:#FFFCF5;
+    --ink:#2B1B10; --ink-dim:#7A6A57;
+    --line:rgba(43,27,16,0.1); --line-strong:rgba(43,27,16,0.2);
+    --brown:#7A4B25; --brown-deep:#5A371A; --brown-dark:#2E1D10;
+    --rust:#A5502E; --gold:#B98A46;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;overflow-x:hidden;line-height:1.55;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;line-height:1.1;}
+  .display{font-family:'Bebas Neue',sans-serif;font-weight:400;letter-spacing:0.01em;line-height:0.92;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.13em;text-transform:uppercase;color:var(--rust);display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:18px;height:1px;background:var(--rust);}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 32px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+  }
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity 0.8s var(--ease), transform 0.8s var(--ease);}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+  .reveal-stagger > *{opacity:0;transform:translateY(22px);transition:opacity 0.6s var(--ease), transform 0.6s var(--ease);}
+  .reveal-stagger.in-view > *{opacity:1;transform:translateY(0);}
+  .reveal-stagger.in-view > *:nth-child(1){transition-delay:0.02s;}
+  .reveal-stagger.in-view > *:nth-child(2){transition-delay:0.09s;}
+  .reveal-stagger.in-view > *:nth-child(3){transition-delay:0.16s;}
+  .reveal-stagger.in-view > *:nth-child(4){transition-delay:0.23s;}
+
+  /* ================= PRELOADER ================= */
+  #preloader{position:fixed;inset:0;z-index:999;background:var(--brown-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+  #preloader .pl-mark{display:flex;gap:4px;}
+  #preloader .pl-mark i{display:block;width:8px;border-radius:1px 1px 0 0;animation:plbar 1s ease-in-out infinite;}
+  #preloader .pl-mark i:nth-child(1){height:22px;animation-delay:0s;background:var(--rust);}
+  #preloader .pl-mark i:nth-child(2){height:34px;animation-delay:0.12s;background:var(--gold);}
+  #preloader .pl-mark i:nth-child(3){height:26px;animation-delay:0.24s;background:#C7A874;}
+  #preloader .pl-mark i:nth-child(4){height:38px;animation-delay:0.36s;background:var(--rust);}
+  @keyframes plbar{0%,100%{transform:scaleY(0.5);}50%{transform:scaleY(1);}}
+  #preloader .pl-count{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;letter-spacing:0.1em;color:rgba(246,239,225,0.7);}
+  #preloader .pl-count b{color:#F6EFE1;font-size:1rem;}
+  #preloader .pl-bar{width:220px;height:1px;background:rgba(246,239,225,0.16);position:relative;overflow:hidden;}
+  #preloader .pl-bar span{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--rust),var(--gold));}
+  body.loading{overflow:hidden;height:100vh;}
+
+  .frame{position:relative;}
+  .frame .corner{position:absolute;width:14px;height:14px;border-color:var(--gold);opacity:0.7;}
+  .frame .corner.tl{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid;}
+  .frame .corner.tr{top:-1px;right:-1px;border-top:2px solid;border-right:2px solid;}
+  .frame .corner.bl{bottom:-1px;left:-1px;border-bottom:2px solid;border-left:2px solid;}
+  .frame .corner.br{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid;}
+
+  /* ================= HEADER ================= */
+  header{position:fixed;top:0;left:0;right:0;z-index:100;padding:22px 0;transition:all 0.4s var(--ease);}
+  header.scrolled{padding:13px 0;background:rgba(246,239,225,0.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);}
+  nav.wrap{display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'Fraunces',serif;font-weight:700;font-size:1.25rem;}
+  .logo-mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--brown),var(--rust));display:flex;align-items:center;justify-content:center;}
+  .logo-mark svg{width:14px;height:14px;}
+  .nav-links{display:flex;gap:32px;font-size:0.9rem;font-weight:500;color:var(--ink-dim);}
+  .nav-links a{position:relative;padding:4px 0;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a::after{content:'';position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--rust);transition:width 0.3s var(--ease);}
+  .nav-links a:hover::after{width:100%;}
+  .nav-cta{display:flex;align-items:center;gap:18px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:999px;font-size:0.86rem;font-weight:600;letter-spacing:0.02em;transition:transform 0.35s var(--ease), box-shadow 0.35s var(--ease), background 0.3s, border-color 0.3s;white-space:nowrap;}
+  .btn-primary{background:var(--brown-deep);color:#F6EFE1;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(90,55,26,0.32);}
+  .btn-ghost{color:var(--ink);border:1px solid var(--line-strong);background:transparent;}
+  .btn-ghost:hover{border-color:var(--brown-deep);transform:translateY(-2px);}
+  .sign-in-link{font-size:0.9rem;color:var(--ink-dim);transition:color 0.3s;}
+  .sign-in-link:hover{color:var(--ink);}
+
+  /* ================= FLOWING MENU (nav-links) =================
+     A compact, header-friendly take on the react-bits "Flowing Menu":
+     a gradient panel flows in behind each link on hover and keeps
+     drifting sideways while you linger, like it's got somewhere to be. */
+  .nav-links li{position:relative;}
+  .nav-links a{position:relative;z-index:1;}
+  .nav-links a::before{
+    content:'';position:absolute;inset:-7px -12px;border-radius:999px;
+    background:linear-gradient(120deg,var(--rust),var(--gold),var(--rust));
+    background-size:220% 100%;background-position:0% 0%;
+    transform:scaleX(0);transform-origin:left center;
+    transition:transform 0.5s var(--ease);
+    z-index:-1;
+  }
+  .nav-links a:hover::before{transform:scaleX(1);animation:flowSlide 1.8s linear infinite;}
+  .nav-links a:hover{color:#FBF6EA;}
+  @keyframes flowSlide{to{background-position:-220% 0%;}}
+
+  /* ================= HERO — stacked headline ================= */
+  .hero{position:relative;padding:170px 0 80px;overflow:hidden;}
+  .hero-lines{text-align:center;}
+  .hero-lines .hl{font-size:clamp(2.6rem,8vw,6.4rem);display:block;color:var(--brown-dark);}
+  .hero-lines .hl.small{font-size:clamp(1.6rem,4.2vw,3rem);color:var(--ink-dim);}
+  .hero-lines .hl.accent{color:var(--rust);}
+  .hero-media{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:clamp(90px,14vw,180px);height:clamp(56px,9vw,110px);
+    vertical-align:middle;margin:0 14px;border-radius:8px;overflow:hidden;
+    background:linear-gradient(155deg,#8A5A32,#4E3016 75%);
+    position:relative;top:-4px;
+  }
+  .hero-sub{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:34px;font-family:'IBM Plex Mono',monospace;font-size:0.82rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-dim);}
+  .hero-sub .dot{width:4px;height:4px;border-radius:50%;background:var(--ink-dim);}
+  .hero-dotline{width:100%;max-width:640px;margin:38px auto 0;height:1px;background-image:linear-gradient(90deg, var(--line-strong) 40%, transparent 0%);background-size:10px 1px;background-repeat:repeat-x;}
+  .hero-actions{display:flex;gap:16px;justify-content:center;margin-top:40px;flex-wrap:wrap;}
+
+  /* ================= ABOUT BAND ================= */
+  .about-band{padding:100px 0;}
+  .about-grid{display:grid;grid-template-columns:0.9fr 1.1fr;gap:60px;align-items:start;}
+  .about-grid h2{font-size:clamp(1.6rem,3vw,2.3rem);}
+  .about-grid p{color:var(--ink-dim);font-size:1.02rem;margin-top:18px;max-width:440px;}
+  .about-tag{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-dim);border:1px solid var(--line-strong);padding:8px 14px;border-radius:999px;margin-top:24px;}
+  .about-tag i{width:6px;height:6px;border-radius:50%;background:var(--rust);}
+
+  /* ================= COLLECTION GRID ================= */
+  section{padding:110px 0;}
+  section.soft{background:var(--bg-soft);}
+  .section-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:50px;gap:20px;flex-wrap:wrap;}
+  .section-top h2{font-size:clamp(1.9rem,3.4vw,2.6rem);}
+  .collection-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  .prod-card{position:relative;}
+  .prod-media{position:relative;height:280px;border-radius:12px;overflow:hidden;display:flex;align-items:flex-end;padding:16px;transition:transform 0.5s var(--ease), box-shadow 0.5s var(--ease);}
+  .prod-media::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px);transition:transform 0.6s var(--ease);}
+  .prod-card:hover .prod-media::before{transform:scale(1.15);}
+  /* zoom-in on hover, à la react-bits card hover — media grows, meta text stays put */
+  .prod-card:hover .prod-media{transform:scale(1.05);box-shadow:0 22px 40px rgba(43,27,16,0.28);}
+  .prod-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(46,29,16,0.72);opacity:0;transition:opacity 0.4s var(--ease);}
+  .prod-card:hover .prod-overlay{opacity:1;}
+  .prod-overlay span{font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.08em;text-transform:uppercase;color:#F6EFE1;border-bottom:1px solid #F6EFE1;padding-bottom:3px;}
+  .prod-cond{position:relative;z-index:1;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:#F6EFE1;text-transform:uppercase;letter-spacing:0.04em;}
+  .prod-meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;}
+  .prod-meta h4{font-size:1.02rem;font-weight:600;}
+  .prod-meta .price{font-family:'IBM Plex Mono',monospace;color:var(--rust);font-weight:600;font-size:0.94rem;}
+  .prod-author{font-size:0.8rem;color:var(--ink-dim);margin-top:2px;}
+
+  /* ================= PROCESS — printed headline ================= */
+  .process{padding:110px 0 70px;}
+  .process-head{text-align:center;max-width:760px;margin:0 auto 70px;}
+  .print-heading{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:clamp(1.4rem,3.4vw,2.4rem);letter-spacing:0.01em;color:var(--brown-dark);}
+  .print-heading .cursor{display:inline-block;width:0.5ch;background:var(--rust);animation:blink 0.9s steps(1) infinite;margin-left:2px;}
+  @keyframes blink{50%{opacity:0;}}
+  .process-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;}
+  .p-step{padding-top:22px;border-top:2px solid var(--line-strong);}
+  .p-step .p-num{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--rust);margin-bottom:10px;}
+  .p-step h3{font-size:1.15rem;margin-bottom:8px;}
+  .p-step p{color:var(--ink-dim);font-size:0.92rem;}
+
+  /* ================= STAMP ================= */
+  .stamp-wrap{display:flex;justify-content:center;margin:60px 0 0;}
+  .stamp{width:118px;height:118px;border-radius:50%;border:3px solid var(--rust);display:flex;align-items:center;justify-content:center;text-align:center;transform:scale(0) rotate(-18deg);position:relative;}
+  .stamp::before,.stamp::after{content:'';position:absolute;inset:8px;border-radius:50%;border:1px solid var(--rust);}
+  .stamp::after{inset:16px;}
+  .stamp span{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--rust);font-weight:600;line-height:1.5;}
+
+  /* ================= HORIZONTAL SCROLL GALLERY ================= */
+  .h-pin{position:relative;background:var(--brown-dark);}
+  .h-viewport{height:100vh;overflow:hidden;position:relative;display:flex;align-items:center;}
+  .h-heading{position:absolute;top:60px;left:0;right:0;text-align:center;z-index:2;}
+  .h-heading .eyebrow{justify-content:center;color:var(--gold);}
+  .h-heading .eyebrow::before{background:var(--gold);}
+  .h-heading h2{color:#F6EFE1;font-size:clamp(1.7rem,3vw,2.3rem);margin-top:12px;}
+  .h-track{display:flex;gap:24px;padding:0 6vw;will-change:transform;margin-top:40px;}
+  .h-card{flex:0 0 auto;width:min(360px,70vw);height:440px;border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:22px;transition:transform 0.5s var(--ease),box-shadow 0.5s var(--ease);}
+  .h-card::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px);}
+  .h-card:hover{transform:scale(1.035);box-shadow:0 26px 46px rgba(0,0,0,0.35);}
+  .h-card .hc-tag{position:absolute;top:20px;left:20px;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;color:rgba(246,239,225,0.65);text-transform:uppercase;letter-spacing:0.06em;z-index:1;}
+  .h-card .hc-title{font-family:'Fraunces',serif;font-weight:600;font-size:1.3rem;color:#F6EFE1;position:relative;z-index:1;}
+  .h-card .hc-sub{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:rgba(246,239,225,0.6);margin-top:6px;position:relative;z-index:1;}
+
+  /* ================= SCROLL STACK ================= */
+  .stack-section{padding-bottom:60px;}
+  .stack-pin{position:relative;}
+  .stack-cards{position:relative;padding-bottom:20px;}
+  .stack-card{
+    position:sticky;top:112px;
+    height:360px;margin-bottom:34px;
+    border-radius:16px;overflow:hidden;
+    display:flex;align-items:flex-end;padding:26px;
+    box-shadow:0 26px 54px rgba(43,27,16,0.28);
+    transform-origin:top center;will-change:transform;
+  }
+  .stack-card::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(115deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 16px);}
+  .stack-card .sc-index{position:absolute;top:20px;right:22px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:rgba(246,239,225,0.55);letter-spacing:0.06em;z-index:1;}
+  .stack-card .sc-tag{position:relative;z-index:1;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+  .stack-card h3{position:relative;z-index:1;font-size:1.5rem;color:#F6EFE1;}
+  .stack-card .sc-author{position:relative;z-index:1;font-size:0.85rem;color:rgba(246,239,225,0.65);margin-top:4px;}
+  .stack-card .sc-note{position:relative;z-index:1;font-size:0.86rem;color:rgba(246,239,225,0.8);margin-top:12px;max-width:420px;font-family:'Fraunces',serif;font-style:italic;}
+
+  /* ================= MARQUEE ================= */
+  .marquee-wrap{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:24px 0;background:var(--surface);}
+  .marquee-track{display:flex;gap:48px;width:max-content;animation:marquee 26s linear infinite;}
+  .marquee-track span{font-family:'Fraunces',serif;font-weight:500;font-size:1.05rem;color:var(--ink-dim);white-space:nowrap;display:flex;align-items:center;gap:48px;}
+  .marquee-track span b{color:var(--ink);font-weight:600;}
+  .marquee-track span::after{content:'—';color:var(--rust);margin-left:48px;}
+  @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* ================= TRUST STRIP ================= */
+  .trust-strip{padding:90px 0;}
+  .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center;}
+  .trust-item{padding:28px 18px;border-right:1px solid var(--line);}
+  .trust-item:last-child{border-right:none;}
+  .trust-icon{width:44px;height:44px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .trust-item h4{font-size:0.98rem;margin-bottom:6px;}
+  .trust-item p{font-size:0.82rem;color:var(--ink-dim);}
+
+  /* ================= CTA BANNER ================= */
+  .cta-banner{position:relative;border-radius:20px;padding:70px 56px;background:radial-gradient(ellipse 700px 400px at 80% 0%, rgba(185,138,70,0.28), transparent 60%),radial-gradient(ellipse 500px 400px at 10% 100%, rgba(165,80,46,0.22), transparent 60%),var(--brown-dark);overflow:hidden;text-align:center;}
+  .cta-banner h2{color:#F6EFE1;font-size:clamp(1.9rem,3.6vw,2.8rem);max-width:640px;margin:0 auto;position:relative;z-index:1;}
+  .cta-banner p{color:rgba(246,239,225,0.65);margin:16px auto 0;max-width:440px;position:relative;z-index:1;}
+  .cta-banner .hero-actions{margin-top:30px;position:relative;z-index:1;}
+
+  /* ================= FOOTER ================= */
+  footer{background:var(--surface);padding:64px 0 28px;border-top:1px solid var(--line);}
+  .footer-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:40px;padding-bottom:44px;border-bottom:1px solid var(--line);}
+  .footer-brand p{color:var(--ink-dim);margin:14px 0 20px;max-width:280px;font-size:0.9rem;}
+  .newsletter{display:flex;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;max-width:300px;}
+  .newsletter input{flex:1;background:transparent;border:none;padding:11px 16px;color:var(--ink);font-size:0.85rem;outline:none;}
+  .newsletter button{background:var(--brown-deep);color:#F6EFE1;padding:0 18px;font-weight:600;font-size:0.85rem;}
+  .fcol h5{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:16px;}
+  .fcol li{margin-bottom:11px;}
+  .fcol a{color:var(--ink-dim);font-size:0.88rem;transition:color 0.3s;}
+  .fcol a:hover{color:var(--rust);}
+  .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:22px;font-size:0.78rem;color:var(--ink-dim);flex-wrap:wrap;gap:12px;}
+
+  /* ================= PAGE-WIDE SCROLL STROKE ================= */
+  .page-stroke-svg{position:fixed;top:0;right:-6%;width:min(760px,85vw);height:100vh;z-index:3;opacity:0.55;pointer-events:none;}
+  .stroke-intro{padding:60px 0 10px;text-align:center;}
+  .stroke-heading{font-size:clamp(1.8rem,4.6vw,3.2rem);color:var(--brown-dark);max-width:760px;margin:0 auto;position:relative;z-index:4;}
+  .stroke-intro-sub{margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-dim);position:relative;z-index:4;}
+  .stroke-panel{background:var(--brown-dark);border-radius:24px;margin:0 24px 110px;padding:70px 40px;text-align:center;position:relative;overflow:hidden;}
+  .stroke-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 700px 400px at 80% 0%, rgba(185,138,70,0.22), transparent 60%);}
+  .stroke-wordmark{font-size:clamp(2.6rem,10vw,6.4rem);color:var(--bg);position:relative;z-index:1;}
+  .stroke-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:54px;position:relative;z-index:1;}
+  .stroke-stats span{display:block;font-family:'Fraunces',serif;font-weight:600;font-size:1.7rem;color:var(--gold);}
+  .stroke-stats label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(246,239,225,0.6);}
+
+  @media (max-width:980px){
+    .nav-links{display:none;}
+    .about-grid{grid-template-columns:1fr;gap:24px;}
+    .collection-grid{grid-template-columns:repeat(2,1fr);}
+    .process-steps{grid-template-columns:1fr;gap:24px;}
+    .trust-grid{grid-template-columns:repeat(2,1fr);}
+    .trust-item{border-right:none;border-bottom:1px solid var(--line);}
+    .footer-grid{grid-template-columns:1fr 1fr;row-gap:32px;}
+    .page-stroke-svg{opacity:0.4;width:60vw;}
+    .stroke-stats{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 20px;}
+    .collection-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr;}
+    section{padding:76px 0;}
+    .hero-media{display:block;margin:16px auto;width:60vw;height:34vw;}
+    .stack-card{top:82px;height:300px;padding:20px;}
+    .stack-card h3{font-size:1.2rem;}
+    .page-stroke-svg{display:none;}
+    .stroke-panel{margin:0 12px 90px;padding:50px 22px;}
+  }
+</style>
+</head>
+<body class="loading">
+
+<div id="preloader">
+  <div class="pl-mark"><i></i><i></i><i></i><i></i></div>
+  <div class="pl-count"><b id="plNum">0</b>%</div>
+  <div class="pl-bar"><span id="plBar"></span></div>
+</div>
+
+<!-- ================= PAGE-WIDE SCROLL STROKE ================= -->
+<!-- Adapted from the "Skiper 19" scroll-linked stroke concept. Fixed in place
+     and driven by the ENTIRE document's scroll progress (top of hero to the
+     very bottom of the page), rather than a single section. -->
+<svg class="page-stroke-svg" viewBox="0 0 700 900" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path id="storyPath" d="M486 216C430 178 372 192 369 228C365 279 469 277 522 224C567 184 562 102 500 76C444 55 391 111 435 137C494 172 550 65 462 24C404 -3 366 33 362 65C359 98 386 101 401 95C416 89 419 70 408 53C391 26 344 44 322 68C302 84 295 111 306 138C316 161 337 175 362 170C412 160 396 113 366 100C336 87 261 112 263 158C264 187 277 205 314 205C374 206 428 165 501 161C566 157 674 171 704 213C719 233 723 249 707 268C689 289 646 289 615 261C584 233 574 209 577 175C579 143 598 116 626 110C648 105 670 108 674 127C678 147 636 147 616 142C595 137 583 119 576 99C567 76 574 57 590 39C607 18 641 10 662 27C683 44 671 60 653 74C627 92 592 84 561 65C536 49 500 12 519 -9C532 -23 559 -22 566 1C572 24 563 46 545 68C528 90 502 121 507 158C512 194 553 262 597 265C625 268 658 270 664 240C673 190 617 161 573 187C536 209 527 253 526 300C522 402 665 512 502 623C378 705 90 500 -25 645C-105 750 -132 908 -8 969C215 1078 605 807 654 1085C696 1338 -6 1010 118 1440" stroke="#B98A46" stroke-width="9" stroke-linecap="round"/>
+</svg>
+
+<header id="siteHeader">
+  <nav class="wrap">
+    <a href="#" class="logo">
+      <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#F6EFE1" stroke-width="2"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/></svg></span>
+      BookAndShelf
+    </a>
+    <ul class="nav-links">
+      <li><a href="#collection">Marketplace</a></li>
+      <li><a href="#process">Our Process</a></li>
+      <li><a href="#library">Digital Library</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="#" class="sign-in-link">Sign in</a>
+      <a href="#" class="btn btn-primary">Get started</a>
+    </div>
+  </nav>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="wrap hero-lines">
+    <span class="hl display" data-hero>WE DON'T</span>
+    <span class="hl display" data-hero>JUST SELL BOOKS.</span>
+    <span class="hl display" data-hero>WE build <span class="hero-media frame"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></span></span>
+    <span class="hl display accent" data-hero>A SECOND LIFE.</span>
+
+    <div class="hero-sub" data-hero>
+      <span>Trust</span><span class="dot"></span><span>Access</span><span class="dot"></span><span>Community</span>
+    </div>
+    <div class="hero-dotline" data-hero></div>
+    <div class="hero-actions" data-hero>
+      <a href="#collection" class="btn btn-primary">Browse the marketplace</a>
+      <a href="#library" class="btn btn-ghost">Explore the library</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCROLL STROKE INTRO (heading only — the line itself is the fixed, whole-page element near the top of body) ================= -->
+<section class="stroke-intro">
+  <div class="wrap">
+    <h2 class="stroke-heading reveal">A book's second life, drawn out one scroll at a time.</h2>
+    <p class="stroke-intro-sub reveal">Keep scrolling — the line finishes as the page does</p>
+  </div>
+</section>
+<div class="wrap">
+  <div class="stroke-panel reveal">
+    <h2 class="display stroke-wordmark">BOOKANDSHELF</h2>
+    <div class="stroke-stats">
+      <div><span>2024</span><label>Founded in Lahore</label></div>
+      <div><span>12k+</span><label>Books rehomed</label></div>
+      <div><span>3.4k</span><label>Verified sellers</label></div>
+      <div><span>24/7</span><label>Digital library access</label></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ABOUT BAND ================= -->
+<section class="about-band soft">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <h2>BOOKANDSHELF IS ROOTED IN PAGES, PEOPLE, AND THE STORIES THAT CONNECT THEM.</h2>
+    </div>
+    <div class="reveal">
+      <p>We're a marketplace and digital library built around trust, accessibility, and books that deserve to be read more than once. Backed by verified sellers and a carefully curated e-book collection, we help every book find its next reader — physical or digital.</p>
+      <div class="about-tag"><i></i> In-house curation team</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COLLECTION ================= -->
+<section id="collection">
+  <div class="wrap">
+    <div class="section-top reveal">
+      <div><div class="eyebrow">Our collection</div><h2>Fresh off the shelf.</h2></div>
+      <a href="#" class="btn btn-ghost">Explore marketplace</a>
+    </div>
+    <div class="collection-grid reveal-stagger" id="collectionGrid"></div>
+  </div>
+</section>
+
+<!-- ================= PROCESS — printed headline ================= -->
+<section id="process" class="soft process">
+  <div class="wrap">
+    <div class="process-head reveal">
+      <div class="eyebrow" style="justify-content:center;">How a book finds you</div>
+      <h2 class="print-heading" id="printHeading" style="margin-top:16px;">FROM A LISTING TO YOUR SHELF<span class="cursor">&nbsp;</span></h2>
+    </div>
+    <div class="process-steps reveal-stagger">
+      <div class="p-step">
+        <div class="p-num mono">01 / IT BEGINS</div>
+        <h3>With a listing</h3>
+        <p>A seller photographs their book, sets a fair price, and describes its condition honestly.</p>
+      </div>
+      <div class="p-step">
+        <div class="p-num mono">02 / THEN COMES</div>
+        <h3>Verification</h3>
+        <p>Every listing is checked for accuracy, and every seller carries a visible rating history.</p>
+      </div>
+      <div class="p-step">
+        <div class="p-num mono">03 / AND FINALLY</div>
+        <h3>It's yours</h3>
+        <p>Secure checkout, real-time chat for pickup details, and the book ships to your door.</p>
+      </div>
+    </div>
+    <div class="stamp-wrap reveal" id="stampWrap">
+      <div class="stamp" id="stampEl"><span>Verified<br>Listing<br>✓ Checked</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCROLL STACK ================= -->
+<section id="staffpicks" class="stack-section">
+  <div class="wrap">
+    <div class="section-top reveal">
+      <div><div class="eyebrow">Shelf stack</div><h2>Five staff picks. One very literal pile.</h2></div>
+    </div>
+    <div class="stack-pin">
+      <div class="stack-cards" id="stackCards"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HORIZONTAL SCROLL GALLERY ================= -->
+<div class="h-pin" id="hPin">
+  <div class="h-viewport">
+    <div class="h-heading">
+      <div class="eyebrow">Signature shelf</div>
+      <h2>Titles readers keep coming back for.</h2>
+    </div>
+    <div class="h-track" id="hTrack"></div>
+  </div>
+</div>
+
+<!-- ================= MARQUEE ================= -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span><b>Fiction</b> Non-fiction <b>Textbooks</b> Poetry <b>Sci-Fi</b> Biography <b>Classics</b> Self-help</span>
+    <span><b>Fiction</b> Non-fiction <b>Textbooks</b> Poetry <b>Sci-Fi</b> Biography <b>Classics</b> Self-help</span>
+  </div>
+</div>
+
+<!-- ================= DIGITAL LIBRARY teaser ================= -->
+<section id="library">
+  <div class="wrap">
+    <div class="section-top reveal">
+      <div><div class="eyebrow">Curated by the admin team</div><h2>Your digital shelf, always open.</h2></div>
+      <a href="#" class="btn btn-primary">Open the library</a>
+    </div>
+    <div class="collection-grid reveal-stagger" id="libGrid"></div>
+  </div>
+</section>
+
+<!-- ================= TRUST STRIP ================= -->
+<section class="trust-strip soft">
+  <div class="wrap">
+    <div class="section-top reveal" style="margin-bottom:50px;">
+      <div><div class="eyebrow">We are trusted</div><h2>Built to protect every trade.</h2></div>
+    </div>
+    <div class="trust-grid reveal-stagger">
+      <div class="trust-item">
+        <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A4B25" stroke-width="1.7"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg></div>
+        <h4>Secure payments</h4><p>Encrypted checkout, held funds</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5502E" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg></div>
+        <h4>Verified sellers</h4><p>Identity &amp; rating checks</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A4B25" stroke-width="1.7"><path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-11.8 3.4L3 20l1.1-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+        <h4>Real-time chat</h4><p>Message before you commit</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5502E" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></div>
+        <h4>Curated library</h4><p>Every e-book reviewed first</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section style="padding-top:0;">
+  <div class="wrap">
+    <div class="cta-banner reveal">
+      <h2>Your next favorite book is already on someone's shelf.</h2>
+      <p>Join for free — list a book to sell or start reading from the library today.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary" style="background:#F6EFE1;color:var(--brown-dark);">Create your account</a>
+        <a href="#" class="btn btn-ghost" style="border-color:rgba(246,239,225,0.3);color:#F6EFE1;">See how it works</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#F6EFE1" stroke-width="2"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/></svg></span>BookAndShelf</a>
+        <p>A marketplace for pre-owned books and a curated digital library, built for readers, students, and collectors.</p>
+        <div class="newsletter"><input type="email" placeholder="you@email.com"><button>Notify me</button></div>
+      </div>
+      <div class="fcol"><h5>Marketplace</h5><ul><li><a href="#">Browse listings</a></li><li><a href="#">Sell a book</a></li><li><a href="#">Seller guide</a></li></ul></div>
+      <div class="fcol"><h5>Library</h5><ul><li><a href="#">All e-books</a></li><li><a href="#">New additions</a></li><li><a href="#">Request a title</a></li></ul></div>
+      <div class="fcol"><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Trust &amp; safety</a></li><li><a href="#">Contact</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 BookAndShelf. All rights reserved.</span>
+      <span class="mono">Reading list, always open.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  var books = [
+    {t:'The Odyssey', a:'Homer', price:'Rs 420', cond:'Good', c1:'#8A5A32', c2:'#4E3016'},
+    {t:'Intro to Algorithms', a:'CLRS', price:'Rs 1,350', cond:'Fair', c1:'#A5502E', c2:'#5A2A18'},
+    {t:'Pride & Prejudice', a:'J. Austen', price:'Rs 300', cond:'Like New', c1:'#5A371A', c2:'#2E1D10'},
+    {t:'Calculus Vol. 1', a:'J. Stewart', price:'Rs 980', cond:'Good', c1:'#B98A46', c2:'#6E5326'}
+  ];
+  var collectionGrid = document.getElementById('collectionGrid');
+  books.forEach(function(b){
+    var card = document.createElement('div');
+    card.className = 'prod-card';
+    card.innerHTML =
+      '<div class="prod-media" style="background:linear-gradient(150deg,'+b.c1+','+b.c2+')">' +
+        '<span class="prod-cond">'+b.cond+'</span>' +
+        '<div class="prod-overlay"><span>Learn more</span></div>' +
+      '</div>' +
+      '<div class="prod-meta"><h4>'+b.t+'</h4><div class="price">'+b.price+'</div></div>' +
+      '<div class="prod-author">'+b.a+'</div>';
+    collectionGrid.appendChild(card);
+  });
+
+  var ebooks = [
+    {t:'Meditations', a:'Marcus Aurelius', price:'Free', cond:'E-book', c1:'#8A5A32', c2:'#4E3016'},
+    {t:'The Art of War', a:'Sun Tzu', price:'Free', cond:'E-book', c1:'#A5502E', c2:'#5A2A18'},
+    {t:'Frankenstein', a:'Mary Shelley', price:'Free', cond:'E-book', c1:'#5A371A', c2:'#2E1D10'},
+    {t:'A Study in Scarlet', a:'A. C. Doyle', price:'Free', cond:'E-book', c1:'#B98A46', c2:'#6E5326'}
+  ];
+  var libGrid = document.getElementById('libGrid');
+  ebooks.forEach(function(b){
+    var card = document.createElement('div');
+    card.className = 'prod-card';
+    card.innerHTML =
+      '<div class="prod-media" style="background:linear-gradient(150deg,'+b.c1+','+b.c2+')">' +
+        '<span class="prod-cond">'+b.cond+'</span>' +
+        '<div class="prod-overlay"><span>Read now</span></div>' +
+      '</div>' +
+      '<div class="prod-meta"><h4>'+b.t+'</h4><div class="price">'+b.price+'</div></div>' +
+      '<div class="prod-author">'+b.a+'</div>';
+    libGrid.appendChild(card);
+  });
+
+  var hcards = [
+    {t:'Circe', a:'Madeline Miller', tag:'FICTION', c1:'#8A5A32', c2:'#4E3016'},
+    {t:'Sapiens', a:'Yuval N. Harari', tag:'NON-FICTION', c1:'#A5502E', c2:'#5A2A18'},
+    {t:'Dune', a:'Frank Herbert', tag:'SCI-FI', c1:'#5A371A', c2:'#2E1D10'},
+    {t:'Educated', a:'Tara Westover', tag:'MEMOIR', c1:'#B98A46', c2:'#6E5326'},
+    {t:'1984', a:'George Orwell', tag:'CLASSIC', c1:'#8A5A32', c2:'#4E3016'},
+    {t:'Atomic Habits', a:'James Clear', tag:'SELF-HELP', c1:'#A5502E', c2:'#5A2A18'}
+  ];
+  var hTrack = document.getElementById('hTrack');
+  hcards.forEach(function(b){
+    var card = document.createElement('div');
+    card.className = 'h-card';
+    card.style.background = 'linear-gradient(150deg,'+b.c1+','+b.c2+')';
+    card.innerHTML = '<span class="hc-tag">'+b.tag+'</span><div><div class="hc-title">'+b.t+'</div><div class="hc-sub">'+b.a+'</div></div>';
+    hTrack.appendChild(card);
+  });
+
+  var stackBooks = [
+    {t:'The Night Circus', a:'Erin Morgenstern', note:'Read past your bedtime. We won\u2019t tell.', c1:'#8A5A32', c2:'#4E3016'},
+    {t:'Project Hail Mary', a:'Andy Weir', note:'Zero gravity, maximum plot twists.', c1:'#A5502E', c2:'#5A2A18'},
+    {t:'The Song of Achilles', a:'Madeline Miller', note:'Keep tissues within arm\u2019s reach.', c1:'#5A371A', c2:'#2E1D10'},
+    {t:'Piranesi', a:'Susanna Clarke', note:'A house with more rooms than sense.', c1:'#B98A46', c2:'#6E5326'},
+    {t:'Klara and the Sun', a:'Kazuo Ishiguro', note:'Last card in the stack, first in our hearts.', c1:'#7A4B25', c2:'#3A2412'}
+  ];
+  var stackCardsEl = document.getElementById('stackCards');
+  stackBooks.forEach(function(b, i){
+    var card = document.createElement('div');
+    card.className = 'stack-card';
+    card.style.background = 'linear-gradient(150deg,'+b.c1+','+b.c2+')';
+    card.style.zIndex = i + 1;
+    card.innerHTML =
+      '<span class="sc-index mono">0'+(i+1)+' / 0'+stackBooks.length+'</span>' +
+      '<div><div class="sc-tag">Staff pick</div><h3>'+b.t+'</h3><div class="sc-author">'+b.a+'</div><p class="sc-note">'+b.note+'</p></div>';
+    stackCardsEl.appendChild(card);
+  });
+
+  var header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', function(){
+    header.classList.toggle('scrolled', window.scrollY > 40);
+  }, {passive:true});
+
+  var plNum = document.getElementById('plNum');
+  var plBar = document.getElementById('plBar');
+  var counter = {v:0};
+  gsap.to(counter, {
+    v:100, duration:1.8, ease:'power2.inOut',
+    onUpdate:function(){
+      var val = Math.floor(counter.v);
+      plNum.textContent = val;
+      plBar.style.width = val + '%';
+    },
+    onComplete:function(){
+      var tl = gsap.timeline({
+        onComplete:function(){
+          document.body.classList.remove('loading');
+          document.getElementById('preloader').style.display='none';
+          ScrollTrigger.refresh();
+        }
+      });
+      tl.to('#preloader', {yPercent:-100, duration:0.9, ease:'power4.inOut'})
+        .from('[data-hero]', {y:36, opacity:0, stagger:0.09, duration:0.8, ease:'power3.out'}, '-=0.3');
+    }
+  });
+
+  var printHeading = document.getElementById('printHeading');
+  var fullText = printHeading.textContent.trim();
+  printHeading.textContent = '';
+  var cursorSpan = document.createElement('span');
+  cursorSpan.className = 'cursor';
+  cursorSpan.innerHTML = '&nbsp;';
+
+  ScrollTrigger.create({
+    trigger:'#printHeading', start:'top 80%', once:true,
+    onEnter:function(){
+      var i = 0;
+      var iv = setInterval(function(){
+        printHeading.textContent = fullText.slice(0, i);
+        printHeading.appendChild(cursorSpan);
+        i++;
+        if(i > fullText.length){ clearInterval(iv); }
+      }, 28);
+    }
+  });
+
+  ScrollTrigger.create({
+    trigger:'#stampWrap', start:'top 85%', once:true,
+    onEnter:function(){ gsap.to('#stampEl', {scale:1, rotate:-12, duration:0.5, ease:'back.out(3)'}); }
+  });
+
+  function initHorizontal(){
+    var track = document.getElementById('hTrack');
+    var distance = track.scrollWidth - window.innerWidth + 80;
+    if(distance < 0) distance = 0;
+    gsap.to(track, {
+      x: -distance, ease:'none',
+      scrollTrigger:{
+        trigger:'#hPin', start:'top top',
+        end:'+=' + (distance + window.innerHeight * 0.6),
+        scrub:true, pin:true, invalidateOnRefresh:true
+      }
+    });
+  }
+  window.addEventListener('load', function(){ setTimeout(initHorizontal, 200); });
+
+  function initStack(){
+    var cards = gsap.utils.toArray('#stackCards .stack-card');
+    cards.forEach(function(card, i){
+      if(i === cards.length - 1) return;
+      gsap.to(card, {
+        scale:0.94, filter:'brightness(0.72)', ease:'none',
+        scrollTrigger:{
+          trigger:card, start:'top top+=112', end:'top top-=260',
+          scrub:true, invalidateOnRefresh:true
+        }
+      });
+    });
+  }
+  window.addEventListener('load', function(){ setTimeout(initStack, 200); });
+
+  function initStoryStroke(){
+    var storyPath = document.getElementById('storyPath');
+    if(!storyPath) return;
+    var pathLength = storyPath.getTotalLength();
+    gsap.set(storyPath, {strokeDasharray: pathLength, strokeDashoffset: pathLength});
+
+    var ticking = false;
+    function updateStroke(){
+      var scrollTop = window.scrollY || document.documentElement.scrollTop;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var progress = docHeight > 0 ? scrollTop / docHeight : 0;
+      if(progress < 0) progress = 0;
+      if(progress > 1) progress = 1;
+      gsap.set(storyPath, {strokeDashoffset: pathLength * (1 - progress)});
+      ticking = false;
+    }
+    window.addEventListener('scroll', function(){
+      if(!ticking){
+        requestAnimationFrame(updateStroke);
+        ticking = true;
+      }
+    }, {passive:true});
+    window.addEventListener('resize', updateStroke);
+    updateStroke();
+  }
+  window.addEventListener('load', function(){ setTimeout(initStoryStroke, 250); });
+
+  var revealEls = document.querySelectorAll('.reveal, .reveal-stagger');
+  var revealObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in-view'); revealObs.unobserve(e.target); }
+    });
+  }, {threshold:0.15});
+  revealEls.forEach(function(el){ revealObs.observe(el); });
+
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(ev){
+      var id = a.getAttribute('href');
+      if(id.length > 1){
+        var target = document.querySelector(id);
+        if(target){
+          ev.preventDefault();
+          var top = target.getBoundingClientRect().top + window.scrollY - 84;
+          window.scrollTo({top: top, behavior:'smooth'});
+        }
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
