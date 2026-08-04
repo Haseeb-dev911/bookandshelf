@@ -330,6 +330,53 @@ export function HomePage() {
           onEnter: () => el.classList.add('in-view'),
         });
       });
+
+      // 6. Trust section — premium scroll animations
+      const trustHead = document.querySelector('.trust-anim-head');
+      if (trustHead) {
+        gsap.to(trustHead, {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: trustHead,
+            start: 'top 82%',
+            once: true,
+          },
+        });
+      }
+
+      const trustCards = gsap.utils.toArray<HTMLElement>('.trust-anim-card');
+      if (trustCards.length) {
+        gsap.to(trustCards, {
+          opacity: 1,
+          y: 0,
+          duration: 0.75,
+          ease: 'back.out(1.4)',
+          stagger: 0.13,
+          scrollTrigger: {
+            trigger: trustCards[0],
+            start: 'top 85%',
+            once: true,
+          },
+        });
+      }
+
+      const trustBar = document.querySelector('.trust-anim-bar');
+      if (trustBar) {
+        gsap.to(trustBar, {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: trustBar,
+            start: 'top 90%',
+            once: true,
+          },
+        });
+      }
     });
 
     return () => ctx.revert();
@@ -521,17 +568,17 @@ export function HomePage() {
       </header>
 
       {/* ================= HERO ================= */}
-      <section className="hero relative pt-[170px] pb-[80px] overflow-hidden">
+      <section className="hero relative pt-[120px] md:pt-[170px] pb-[50px] md:pb-[80px] overflow-hidden">
         <div className="wrap hero-lines text-center">
-          <span className="hl display text-[clamp(2.6rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
+          <span className="hl display text-[clamp(2.2rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
             WE DON'T
           </span>
-          <span className="hl display text-[clamp(2.6rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
+          <span className="hl display text-[clamp(2.2rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
             JUST SELL BOOKS.
           </span>
-          <span className="hl display text-[clamp(2.6rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
+          <span className="hl display text-[clamp(2.2rem,8vw,6.4rem)] block text-[var(--brown-dark,#2E1D10)]" data-hero>
             WE build{' '}
-            <span className="hero-media frame inline-flex items-center justify-center w-[clamp(90px,14vw,180px)] h-[clamp(56px,9vw,110px)] vertical-middle mx-[14px] rounded-[8px] overflow-hidden relative -top-[4px]">
+            <span className="hero-media frame inline-flex items-center justify-center w-[clamp(65px,14vw,180px)] h-[clamp(42px,9vw,110px)] vertical-middle mx-[6px] sm:mx-[14px] rounded-[6px] sm:rounded-[8px] overflow-hidden relative -top-[2px] sm:-top-[4px]">
               <span className="corner tl" />
               <span className="corner tr" />
               <span className="corner bl" />
@@ -543,24 +590,24 @@ export function HomePage() {
               />
             </span>
           </span>
-          <span className="hl display accent text-[clamp(2.6rem,8vw,6.4rem)] block text-[var(--rust,#A5502E)]" data-hero>
+          <span className="hl display accent text-[clamp(2.2rem,8vw,6.4rem)] block text-[var(--rust,#A5502E)]" data-hero>
             A SECOND LIFE.
           </span>
 
-          <div className="hero-sub flex items-center justify-center gap-[14px] mt-[34px] font-mono-ibm text-[0.82rem] tracking-[0.06em] uppercase text-[var(--ink-dim,#7A6A57)]" data-hero>
+          <div className="hero-sub flex items-center justify-center gap-[10px] sm:gap-[14px] mt-[24px] sm:mt-[34px] font-mono-ibm text-[0.72rem] sm:text-[0.82rem] tracking-[0.06em] uppercase text-[var(--ink-dim,#7A6A57)]" data-hero>
             <span>Trust</span>
             <span className="dot w-[4px] h-[4px] rounded-full bg-[var(--ink-dim,#7A6A57)]" />
             <span>Access</span>
             <span className="dot w-[4px] h-[4px] rounded-full bg-[var(--ink-dim,#7A6A57)]" />
             <span>Community</span>
           </div>
-          <div className="hero-dotline w-full max-w-[640px] mx-auto mt-[38px] h-[1px] bg-repeat-x bg-[length:10px_1px]" style={{ backgroundImage: 'linear-gradient(90deg, rgba(43,27,16,0.2) 40%, transparent 0%)' }} data-hero />
-          <div className="hero-actions flex gap-[16px] justify-center mt-[40px] flex-wrap" data-hero>
+          <div className="hero-dotline w-full max-w-[640px] mx-auto mt-[28px] sm:mt-[38px] h-[1px] bg-repeat-x bg-[length:10px_1px]" style={{ backgroundImage: 'linear-gradient(90deg, rgba(43,27,16,0.2) 40%, transparent 0%)' }} data-hero />
+          <div className="hero-actions flex gap-[12px] sm:gap-[16px] justify-center mt-[28px] sm:mt-[40px] flex-wrap" data-hero>
             <a href="#collection" className="bs-btn bs-btn-primary">
-              Browse the marketplace
+              Browse marketplace
             </a>
             <a href="#library" className="bs-btn bs-btn-ghost">
-              Explore the library
+              Explore library
             </a>
           </div>
         </div>
@@ -579,27 +626,27 @@ export function HomePage() {
       </section>
 
       <div className="wrap">
-        <div className="stroke-panel reveal bg-[var(--brown-dark,#2E1D10)] rounded-[24px] mx-0 mb-[110px] py-[70px] px-[40px] text-center relative overflow-hidden">
+        <div className="stroke-panel reveal bg-[var(--brown-dark,#2E1D10)] rounded-[20px] sm:rounded-[24px] mx-0 mb-[60px] md:mb-[110px] py-[40px] md:py-[70px] px-[20px] md:px-[40px] text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_400px_at_80%_0%,rgba(185,138,70,0.22),transparent_60%)]" />
-          <h2 className="display stroke-wordmark text-[clamp(2.6rem,10vw,6.4rem)] text-[var(--bg,#F6EFE1)] relative z-10">
+          <h2 className="display stroke-wordmark text-[clamp(2.2rem,10vw,6.4rem)] text-[var(--bg,#F6EFE1)] relative z-10">
             BOOKANDSHELF
           </h2>
-          <div className="stroke-stats grid grid-cols-2 md:grid-cols-4 gap-[24px] mt-[54px] relative z-10">
+          <div className="stroke-stats grid grid-cols-2 md:grid-cols-4 gap-[16px] md:gap-[24px] mt-[32px] md:mt-[54px] relative z-10">
             <div>
-              <span className="font-fraunces font-semibold text-[1.7rem] text-[var(--gold,#B98A46)] block">2024</span>
-              <label className="font-mono-ibm text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Founded in Lahore</label>
+              <span className="font-fraunces font-semibold text-[1.4rem] md:text-[1.7rem] text-[var(--gold,#B98A46)] block">2024</span>
+              <label className="font-mono-ibm text-[0.62rem] md:text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Founded in Lahore</label>
             </div>
             <div>
-              <span className="font-fraunces font-semibold text-[1.7rem] text-[var(--gold,#B98A46)] block">12k+</span>
-              <label className="font-mono-ibm text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Books rehomed</label>
+              <span className="font-fraunces font-semibold text-[1.4rem] md:text-[1.7rem] text-[var(--gold,#B98A46)] block">12k+</span>
+              <label className="font-mono-ibm text-[0.62rem] md:text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Books rehomed</label>
             </div>
             <div>
-              <span className="font-fraunces font-semibold text-[1.7rem] text-[var(--gold,#B98A46)] block">3.4k</span>
-              <label className="font-mono-ibm text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Verified sellers</label>
+              <span className="font-fraunces font-semibold text-[1.4rem] md:text-[1.7rem] text-[var(--gold,#B98A46)] block">3.4k</span>
+              <label className="font-mono-ibm text-[0.62rem] md:text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Verified sellers</label>
             </div>
             <div>
-              <span className="font-fraunces font-semibold text-[1.7rem] text-[var(--gold,#B98A46)] block">24/7</span>
-              <label className="font-mono-ibm text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Digital library access</label>
+              <span className="font-fraunces font-semibold text-[1.4rem] md:text-[1.7rem] text-[var(--gold,#B98A46)] block">24/7</span>
+              <label className="font-mono-ibm text-[0.62rem] md:text-[0.68rem] uppercase tracking-[0.06em] text-[rgba(246,239,225,0.7)]">Digital library access</label>
             </div>
           </div>
         </div>
@@ -717,12 +764,12 @@ export function HomePage() {
       </section>
 
       {/* ================= FIVE STAFF PICKS SCROLL STACK (ALTERNATING IMAGE/TEXT + CONSTANT COLOR) ================= */}
-      <section id="staffpicks" className="stack-section pt-[110px]">
+      <section id="staffpicks" className="stack-section pt-[60px] md:pt-[110px]">
         <div className="wrap">
-          <div className="section-top reveal flex items-end justify-between mb-[50px]">
+          <div className="section-top reveal flex items-end justify-between mb-[32px] md:mb-[50px]">
             <div>
               <div className="eyebrow">Shelf stack</div>
-              <h2 className="font-fraunces font-semibold text-[clamp(1.9rem,3.4vw,2.6rem)] text-[var(--ink,#2B1B10)]">Five staff picks. One very literal pile.</h2>
+              <h2 className="font-fraunces font-semibold text-[clamp(1.6rem,3.4vw,2.6rem)] text-[var(--ink,#2B1B10)]">Five staff picks. One very literal pile.</h2>
             </div>
           </div>
 
@@ -733,7 +780,7 @@ export function HomePage() {
                 return (
                   <div
                     key={i}
-                    className="stack-card flex items-center justify-between p-[32px] md:p-[40px] text-[#F6EFE1]"
+                    className="stack-card flex flex-col md:flex-row items-center justify-between p-[24px] sm:p-[32px] md:p-[40px] text-[#F6EFE1]"
                     style={{
                       backgroundColor: b.bgColor,
                       zIndex: i + 1,
@@ -743,30 +790,30 @@ export function HomePage() {
                       0{i + 1} / 0{STAFF_PICK_BOOKS.length}
                     </span>
 
-                    <div className="w-full flex flex-col md:flex-row items-center gap-[36px] justify-between relative z-10">
+                    <div className="w-full flex flex-col md:flex-row items-center gap-[20px] md:gap-[36px] justify-between relative z-10">
                       {/* Image on left for odd index (1, 3), Image on right for even index (0, 2, 4) */}
                       {isEven ? (
                         <>
-                          <div className="flex-1">
-                            <div className="sc-tag text-[var(--gold)] mb-[10px]">Staff pick</div>
-                            <h3 className="font-fraunces text-[1.8rem] md:text-[2.2rem] font-semibold leading-tight text-[#F6EFE1]">{b.t}</h3>
-                            <div className="sc-author font-mono-ibm text-[0.88rem] opacity-80 mt-[6px]">{b.a}</div>
-                            <p className="sc-note font-fraunces italic text-[1.05rem] mt-[18px] opacity-90 leading-relaxed max-w-[480px]">{b.note}</p>
+                          <div className="flex-1 w-full">
+                            <div className="sc-tag text-[var(--gold)] mb-[6px] md:mb-[10px]">Staff pick</div>
+                            <h3 className="font-fraunces text-[1.4rem] sm:text-[1.8rem] md:text-[2.2rem] font-semibold leading-tight text-[#F6EFE1]">{b.t}</h3>
+                            <div className="sc-author font-mono-ibm text-[0.8rem] md:text-[0.88rem] opacity-80 mt-[4px] md:mt-[6px]">{b.a}</div>
+                            <p className="sc-note font-fraunces italic text-[0.92rem] md:text-[1.05rem] mt-[12px] md:mt-[18px] opacity-90 leading-relaxed max-w-[480px]">{b.note}</p>
                           </div>
-                          <div className="w-[180px] md:w-[240px] h-[220px] md:h-[280px] shrink-0 rounded-[12px] overflow-hidden shadow-2xl border border-white/20">
+                          <div className="w-full sm:w-[180px] md:w-[240px] h-[160px] sm:h-[220px] md:h-[280px] shrink-0 rounded-[10px] sm:rounded-[12px] overflow-hidden shadow-2xl border border-white/20">
                             <img src={b.img} alt={b.t} className="w-full h-full object-cover" />
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-[180px] md:w-[240px] h-[220px] md:h-[280px] shrink-0 rounded-[12px] overflow-hidden shadow-2xl border border-white/20 order-2 md:order-1">
+                          <div className="w-full sm:w-[180px] md:w-[240px] h-[160px] sm:h-[220px] md:h-[280px] shrink-0 rounded-[10px] sm:rounded-[12px] overflow-hidden shadow-2xl border border-white/20 order-2 md:order-1">
                             <img src={b.img} alt={b.t} className="w-full h-full object-cover" />
                           </div>
-                          <div className="flex-1 order-1 md:order-2">
-                            <div className="sc-tag text-[var(--gold)] mb-[10px]">Staff pick</div>
-                            <h3 className="font-fraunces text-[1.8rem] md:text-[2.2rem] font-semibold leading-tight text-[#F6EFE1]">{b.t}</h3>
-                            <div className="sc-author font-mono-ibm text-[0.88rem] opacity-80 mt-[6px]">{b.a}</div>
-                            <p className="sc-note font-fraunces italic text-[1.05rem] mt-[18px] opacity-90 leading-relaxed max-w-[480px]">{b.note}</p>
+                          <div className="flex-1 w-full order-1 md:order-2">
+                            <div className="sc-tag text-[var(--gold)] mb-[6px] md:mb-[10px]">Staff pick</div>
+                            <h3 className="font-fraunces text-[1.4rem] sm:text-[1.8rem] md:text-[2.2rem] font-semibold leading-tight text-[#F6EFE1]">{b.t}</h3>
+                            <div className="sc-author font-mono-ibm text-[0.8rem] md:text-[0.88rem] opacity-80 mt-[4px] md:mt-[6px]">{b.a}</div>
+                            <p className="sc-note font-fraunces italic text-[0.92rem] md:text-[1.05rem] mt-[12px] md:mt-[18px] opacity-90 leading-relaxed max-w-[480px]">{b.note}</p>
                           </div>
                         </>
                       )}
@@ -868,54 +915,153 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ================= TRUST STRIP ================= */}
-      <section className="trust-strip py-[90px] bg-[var(--bg-soft,#EEE2CB)]">
-        <div className="wrap">
-          <div className="section-top reveal mb-[50px]">
-            <div>
-              <div className="eyebrow">We are trusted</div>
-              <h2 className="font-fraunces font-semibold text-[clamp(1.9rem,3.4vw,2.6rem)] text-[var(--ink,#2B1B10)]">Built to protect every trade.</h2>
+      {/* ================= TRUST STRIP (PREMIUM ANIMATED) ================= */}
+      <section id="trust" className="relative py-[120px] overflow-hidden bg-[var(--brown-dark,#2E1D10)]">
+        {/* Background radial glows */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(185,138,70,0.12),transparent_70%)]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(165,80,46,0.10),transparent_70%)]" />
+        </div>
+
+        {/* Subtle grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{ backgroundImage: 'repeating-linear-gradient(0deg,#B98A46 0,#B98A46 1px,transparent 1px,transparent 60px),repeating-linear-gradient(90deg,#B98A46 0,#B98A46 1px,transparent 1px,transparent 60px)' }}
+        />
+
+        <div className="wrap relative z-10">
+          {/* Header */}
+          <div className="trust-anim-head text-center mb-[72px] opacity-0 translate-y-[32px]">
+            <div className="inline-flex items-center gap-[10px] font-mono-ibm text-[0.7rem] tracking-[0.14em] uppercase text-[var(--gold,#B98A46)] mb-[18px]">
+              <span className="w-[28px] h-[1px] bg-[var(--gold,#B98A46)]" />
+              We are trusted
+              <span className="w-[28px] h-[1px] bg-[var(--gold,#B98A46)]" />
             </div>
+            <h2 className="font-fraunces font-semibold text-[clamp(2rem,4vw,3rem)] text-[#F6EFE1] leading-tight">
+              Built to protect<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B98A46] via-[#E8C87A] to-[#B98A46]">every trade.</span>
+            </h2>
           </div>
-          <div className="trust-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[24px] text-center reveal-stagger">
-            <div className="trust-item p-[28px_18px] border-r-0 lg:border-r border-[var(--line,rgba(43,27,16,0.1))]">
-              <div className="trust-icon w-[44px] h-[44px] rounded-full bg-[var(--bg-soft,#EEE2CB)] border border-[var(--line-strong,rgba(43,27,16,0.2))] flex items-center justify-center mx-auto mb-[16px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A4B25" strokeWidth="1.7">
+
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+
+            {/* Card 1 — Secure payments */}
+            <div className="trust-anim-card opacity-0 translate-y-[40px] group relative rounded-[20px] p-[32px_24px] text-center overflow-hidden cursor-default"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(185,138,70,0.18)', backdropFilter: 'blur(10px)' }}>
+              {/* Hover gradient fill */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[20px]"
+                style={{ background: 'radial-gradient(ellipse 200px 140px at 50% 0%,rgba(185,138,70,0.14),transparent 70%)' }} />
+              {/* Top accent line */}
+              <div className="absolute top-0 left-[20%] right-[20%] h-[2px] rounded-b-full bg-gradient-to-r from-transparent via-[#B98A46] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              {/* Icon circle */}
+              <div className="relative mx-auto mb-[22px] w-[64px] h-[64px] rounded-full flex items-center justify-center
+                             bg-gradient-to-br from-[rgba(185,138,70,0.18)] to-[rgba(185,138,70,0.06)]
+                             border border-[rgba(185,138,70,0.30)]
+                             group-hover:scale-110 group-hover:border-[rgba(185,138,70,0.55)]
+                             transition-transform duration-500 ease-out">
+                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-[pulse_2s_ease-in-out_infinite]"
+                  style={{ boxShadow: '0 0 20px rgba(185,138,70,0.35)' }} />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B98A46" strokeWidth="1.6">
                   <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
                 </svg>
               </div>
-              <h4 className="font-fraunces text-[0.98rem] mb-[6px] text-[var(--ink,#2B1B10)]">Secure payments</h4>
-              <p className="text-[0.82rem] text-[var(--ink-dim,#7A6A57)]">Encrypted checkout, held funds</p>
+
+              {/* Stat */}
+              <div className="font-fraunces font-semibold text-[1.8rem] text-[var(--gold,#B98A46)] leading-none mb-[8px]">100%</div>
+              <h4 className="font-fraunces font-semibold text-[1rem] mb-[10px] text-[#F6EFE1]">Secure payments</h4>
+              <p className="font-mono-ibm text-[0.75rem] leading-relaxed text-[rgba(246,239,225,0.55)] tracking-wide">Encrypted checkout,<br />escrowed until confirmed</p>
             </div>
-            <div className="trust-item p-[28px_18px] border-r-0 lg:border-r border-[var(--line,rgba(43,27,16,0.1))]">
-              <div className="trust-icon w-[44px] h-[44px] rounded-full bg-[var(--bg-soft,#EEE2CB)] border border-[var(--line-strong,rgba(43,27,16,0.2))] flex items-center justify-center mx-auto mb-[16px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5502E" strokeWidth="1.7">
+
+            {/* Card 2 — Verified sellers */}
+            <div className="trust-anim-card opacity-0 translate-y-[40px] group relative rounded-[20px] p-[32px_24px] text-center overflow-hidden cursor-default"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(165,80,46,0.22)', backdropFilter: 'blur(10px)' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[20px]"
+                style={{ background: 'radial-gradient(ellipse 200px 140px at 50% 0%,rgba(165,80,46,0.16),transparent 70%)' }} />
+              <div className="absolute top-0 left-[20%] right-[20%] h-[2px] rounded-b-full bg-gradient-to-r from-transparent via-[#A5502E] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative mx-auto mb-[22px] w-[64px] h-[64px] rounded-full flex items-center justify-center
+                             bg-gradient-to-br from-[rgba(165,80,46,0.18)] to-[rgba(165,80,46,0.06)]
+                             border border-[rgba(165,80,46,0.30)]
+                             group-hover:scale-110 group-hover:border-[rgba(165,80,46,0.55)]
+                             transition-transform duration-500 ease-out">
+                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-[pulse_2s_ease-in-out_infinite]"
+                  style={{ boxShadow: '0 0 20px rgba(165,80,46,0.35)' }} />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A5502E" strokeWidth="1.6">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 21c1-4 4-6 8-6s7 2 8 6" />
                 </svg>
               </div>
-              <h4 className="font-fraunces text-[0.98rem] mb-[6px] text-[var(--ink,#2B1B10)]">Verified sellers</h4>
-              <p className="text-[0.82rem] text-[var(--ink-dim,#7A6A57)]">Identity &amp; rating checks</p>
+
+              <div className="font-fraunces font-semibold text-[1.8rem] text-[var(--rust,#A5502E)] leading-none mb-[8px]">3.4k+</div>
+              <h4 className="font-fraunces font-semibold text-[1rem] mb-[10px] text-[#F6EFE1]">Verified sellers</h4>
+              <p className="font-mono-ibm text-[0.75rem] leading-relaxed text-[rgba(246,239,225,0.55)] tracking-wide">Identity &amp; rating checks<br />on every account</p>
             </div>
-            <div className="trust-item p-[28px_18px] border-r-0 lg:border-r border-[var(--line,rgba(43,27,16,0.1))]">
-              <div className="trust-icon w-[44px] h-[44px] rounded-full bg-[var(--bg-soft,#EEE2CB)] border border-[var(--line-strong,rgba(43,27,16,0.2))] flex items-center justify-center mx-auto mb-[16px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A4B25" strokeWidth="1.7">
+
+            {/* Card 3 — Real-time chat */}
+            <div className="trust-anim-card opacity-0 translate-y-[40px] group relative rounded-[20px] p-[32px_24px] text-center overflow-hidden cursor-default"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(185,138,70,0.18)', backdropFilter: 'blur(10px)' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[20px]"
+                style={{ background: 'radial-gradient(ellipse 200px 140px at 50% 0%,rgba(185,138,70,0.14),transparent 70%)' }} />
+              <div className="absolute top-0 left-[20%] right-[20%] h-[2px] rounded-b-full bg-gradient-to-r from-transparent via-[#B98A46] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative mx-auto mb-[22px] w-[64px] h-[64px] rounded-full flex items-center justify-center
+                             bg-gradient-to-br from-[rgba(185,138,70,0.18)] to-[rgba(185,138,70,0.06)]
+                             border border-[rgba(185,138,70,0.30)]
+                             group-hover:scale-110 group-hover:border-[rgba(185,138,70,0.55)]
+                             transition-transform duration-500 ease-out">
+                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-[pulse_2s_ease-in-out_infinite]"
+                  style={{ boxShadow: '0 0 20px rgba(185,138,70,0.35)' }} />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B98A46" strokeWidth="1.6">
                   <path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-11.8 3.4L3 20l1.1-5.2A8.5 8.5 0 1 1 21 11.5z" />
                 </svg>
               </div>
-              <h4 className="font-fraunces text-[0.98rem] mb-[6px] text-[var(--ink,#2B1B10)]">Real-time chat</h4>
-              <p className="text-[0.82rem] text-[var(--ink-dim,#7A6A57)]">Message before you commit</p>
+
+              <div className="font-fraunces font-semibold text-[1.8rem] text-[var(--gold,#B98A46)] leading-none mb-[8px]">Live</div>
+              <h4 className="font-fraunces font-semibold text-[1rem] mb-[10px] text-[#F6EFE1]">Real-time chat</h4>
+              <p className="font-mono-ibm text-[0.75rem] leading-relaxed text-[rgba(246,239,225,0.55)] tracking-wide">Message sellers directly<br />before you commit</p>
             </div>
-            <div className="trust-item p-[28px_18px]">
-              <div className="trust-icon w-[44px] h-[44px] rounded-full bg-[var(--bg-soft,#EEE2CB)] border border-[var(--line-strong,rgba(43,27,16,0.2))] flex items-center justify-center mx-auto mb-[16px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A5502E" strokeWidth="1.7">
+
+            {/* Card 4 — Curated library */}
+            <div className="trust-anim-card opacity-0 translate-y-[40px] group relative rounded-[20px] p-[32px_24px] text-center overflow-hidden cursor-default"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(165,80,46,0.22)', backdropFilter: 'blur(10px)' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[20px]"
+                style={{ background: 'radial-gradient(ellipse 200px 140px at 50% 0%,rgba(165,80,46,0.16),transparent 70%)' }} />
+              <div className="absolute top-0 left-[20%] right-[20%] h-[2px] rounded-b-full bg-gradient-to-r from-transparent via-[#A5502E] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="relative mx-auto mb-[22px] w-[64px] h-[64px] rounded-full flex items-center justify-center
+                             bg-gradient-to-br from-[rgba(165,80,46,0.18)] to-[rgba(165,80,46,0.06)]
+                             border border-[rgba(165,80,46,0.30)]
+                             group-hover:scale-110 group-hover:border-[rgba(165,80,46,0.55)]
+                             transition-transform duration-500 ease-out">
+                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-[pulse_2s_ease-in-out_infinite]"
+                  style={{ boxShadow: '0 0 20px rgba(165,80,46,0.35)' }} />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A5502E" strokeWidth="1.6">
                   <rect x="4" y="3" width="16" height="18" rx="1.5" />
                   <path d="M8 7h8M8 11h8M8 15h5" />
                 </svg>
               </div>
-              <h4 className="font-fraunces text-[0.98rem] mb-[6px] text-[var(--ink,#2B1B10)]">Curated library</h4>
-              <p className="text-[0.82rem] text-[var(--ink-dim,#7A6A57)]">Every e-book reviewed first</p>
+
+              <div className="font-fraunces font-semibold text-[1.8rem] text-[var(--rust,#A5502E)] leading-none mb-[8px]">12k+</div>
+              <h4 className="font-fraunces font-semibold text-[1rem] mb-[10px] text-[#F6EFE1]">Curated library</h4>
+              <p className="font-mono-ibm text-[0.75rem] leading-relaxed text-[rgba(246,239,225,0.55)] tracking-wide">Every e-book reviewed<br />by our editorial team</p>
             </div>
+          </div>
+
+          {/* Bottom trust bar */}
+          <div className="trust-anim-bar mt-[64px] opacity-0 translate-y-[20px] flex flex-wrap items-center justify-center gap-[32px] sm:gap-[48px]">
+            {[
+              { label: 'End-to-end encryption', icon: '🔒' },
+              { label: 'No hidden fees', icon: '✦' },
+              { label: 'Dispute resolution', icon: '⚖' },
+              { label: 'Buyer protection', icon: '🛡' },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-[10px] font-mono-ibm text-[0.72rem] tracking-[0.06em] uppercase text-[rgba(246,239,225,0.5)] hover:text-[rgba(246,239,225,0.85)] transition-colors duration-300">
+                <span className="text-[var(--gold,#B98A46)] text-[0.85rem]">{item.icon}</span>
+                {item.label}
+              </div>
+            ))}
           </div>
         </div>
       </section>
